@@ -14,7 +14,7 @@
 % Each point along the track is described by {x, y, vx, vy}
 %
 
-function [track, way_points] = track_generator(x_range, y_range, N)
+function track = track_generator(x_range, y_range, N)
 
 % Generate a set of way_points that defines the track
 way_points = way_points_generator(x_range, y_range);
@@ -54,6 +54,7 @@ track.x = xx;
 track.y = yy;
 track.vx = vx;
 track.vy = vy;
+track.wpts = way_points;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function way_points_generator

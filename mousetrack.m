@@ -8,34 +8,24 @@ x_range.max = x_range.min + x_size;
 y_range.min = 0;
 y_range.max = y_range.min + y_size;
 
-% Generate a track. Tracks are described in the global frame.
+% Generate tracks, described in the global frame.
 N = 100;
-[track, wpts] = track_generator(x_range, y_range, N);
-
-% Visualize the track
-figure; hold on;
-plot(wpts.x, wpts.y, 'o', track.x, track.y, 'x');
-quiver(track.x, track.y, track.vx, track.vy);
-xlim([x_range.min x_range.max]); ylim([y_range.min y_range.max]);
-hold off;
+tracks(1) = track_generator(x_range, y_range, N);
 
 % Set up the radar frame with respect to the global frame.
 % Transformation of a point between the radar frame b and the global frame b is given by
 %     b  =  p + Rb'
 %     b' =  R^T(b - p)
-radar_coords.p = [(x_range.max - x_range.min)/2  y_range.min];
-radar_bearing = pi/2;
+radar_coords.p = [(x_range.max + x_range.min)/2; y_range.min];
+radar_coords.bearing = pi/2;
 radar_coords.R = ...
-    [ cos(radar_bearing)  sin(radar_bearing); ...
-     -sin(radar_bearing)  cos(radar_bearing)];
+    [ cos(radar_coords.bearing) -sin(radar_coords.bearing) ; ...
+      sin(radar_coords.bearing)  cos(radar_coords.bearing) ];
 
-% Generate radar measurements from a track
-% meas = measurements_generator(track, radar_coords);
+% Generate radar measurements from a track for times t
+meas = [];
+for t = 10:10:(N-10)
+  meas = [meas measurements_generator(tracks, t, radar_coords)];
+end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Tests:
-%
-% Change the 2D space in global coords, i.e. change x_range.min and y_range.min
-%
-% Change radar location and bearing.
+visualize_tracks_meas(tracks, meas, radar_coords);
