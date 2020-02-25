@@ -16,18 +16,21 @@ end
 all_meas = transform_measurements(meas, radar_coords);
 
 % Plot the noisy and noise-free measurements
-h = polar(all_meas.theta + radar_coords.bearing, all_meas.r, 'o');
-meas_colour = get(h, 'Color');
-h = polar(all_meas.theta0 + radar_coords.bearing, all_meas.r0, 'x');
-meas0_color = get(h, 'Color');
-quiver(all_meas.xy(1,:), all_meas.xy(2,:), all_meas.vxy(1,:), all_meas.vxy(2,:), ...
-    'Color', meas_colour);
-quiver(all_meas.xy0(1,:), all_meas.xy0(2,:), all_meas.vxy0(1,:), all_meas.vxy0(2,:), ...
-    'Color', meas0_color);
+h1 = polar(all_meas.theta + radar_coords.bearing, all_meas.r, 'o');
+h0 = polar(all_meas.theta0 + radar_coords.bearing, all_meas.r0, 'x');
+plot_rdot = 1;
+if plot_rdot
+  meas_colour = get(h1, 'Color');
+  quiver(all_meas.xy(1,:), all_meas.xy(2,:), all_meas.vxy(1,:), all_meas.vxy(2,:), ...
+      'Color', meas_colour);
+  meas0_color = get(h0, 'Color');
+  quiver(all_meas.xy0(1,:), all_meas.xy0(2,:), all_meas.vxy0(1,:), all_meas.vxy0(2,:), ...
+      'Color', meas0_color);
+end
 % TODO: plot error-free measurements with covariances.
 
-legend('track waypoints', 'track true path', 'track true velocity', 'measurements', ...
-    'noise-free measurements');
+legend('track waypoints', 'track true path', 'track true velocity', ...
+    'noisy measurements', 'noise-free measurements', 'Location', 'northwest');
 hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

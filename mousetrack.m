@@ -24,7 +24,7 @@ radar_coords.R = ...
 
 % Generate radar measurements from a track for times t
 meas = [];
-for t = 10:10:(N-10)
+for t = 1:1:(N-1)
   meas = [meas measurements_generator(tracks, t, radar_coords)];
 end
 
