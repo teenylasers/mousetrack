@@ -1,7 +1,7 @@
 % Top-level script that invokes the tracker simulator
 
 % Set up the 2D space, i.e. the cartesian global frame.
-x_size = 6000;
+x_size = 450;
 y_size = x_size/2;
 x_range.min = -x_size/2;
 x_range.max = x_range.min + x_size;
@@ -28,4 +28,7 @@ for t = 1:1:(N-1)
   meas = [meas measurements_generator(tracks, t, radar_coords)];
 end
 
+% Visualize the track(s) and measurements
 visualize_tracks_meas(tracks, meas, radar_coords);
+xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
+ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);

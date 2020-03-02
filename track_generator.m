@@ -89,7 +89,7 @@ way_points = way_points_generator_monotonic_x(x_range, y_range);
 
 function way_points = way_points_generator_monotonic_x(x_range, y_range)
 
-% Generate M way_points, M is a random number between 2 and 6.
+% Generate M way_points, M is a random number between 2 and M_max.
 M_max = 8;
 M = randi([2, M_max], 1);
 x = zeros(1, M);
@@ -109,7 +109,9 @@ for i = 2:M
   % x
   %delta_x = rand(1) * delta_x_bound;
   delta_x = delta_x_bound;
-  assert(x(i-1) + delta_x <= x_range.max);
+  assert(x(i-1) + delta_x <= x_range.max, ...
+      'x(i-1) = %f, delta_x = %f, x_range.max = %f', ...
+      x(i-1), delta_x, x_range.max);
   x(i) = x(i-1) + delta_x;
   % y
   delta_y = randn(1) * delta_y_bound;

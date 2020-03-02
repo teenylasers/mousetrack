@@ -56,4 +56,4 @@ function cov = expected_covariance()
 % covariance based on a scale-factor or r.
 cov.r = 2;
 cov.theta = 2./180.*pi;
-cov.r_dot = 10;
+cov.r_dot = 1;

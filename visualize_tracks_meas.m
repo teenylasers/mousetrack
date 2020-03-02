@@ -3,7 +3,6 @@
 function visualize_tracks_meas(tracks, meas, radar_coords)
 
 figure; hold on;
-%xlim([x_range.min x_range.max]); ylim([y_range.min y_range.max]);
 
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
