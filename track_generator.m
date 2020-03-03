@@ -10,11 +10,14 @@
 % N:
 % Number of points to represent the track.
 %
+% dt:
+% Time between successive track points.
+%
 % track:
 % Each point along the track is described by {x, y, vx, vy}
 %
 
-function track = track_generator(x_range, y_range, N)
+function track = track_generator(x_range, y_range, N, dt)
 
 % Generate a set of way_points that defines the track
 way_points = way_points_generator(x_range, y_range);
@@ -37,13 +40,13 @@ x_end = way_points.x(num_way_points);
 xx = linspace(x_start, x_end, N);
 yy = spline(way_points.x, way_points.y, xx);
 
-% Calculate velocity (vx, vy). Assume time between adjacent track points is unit 1.
+% Calculate velocity (vx, vy).
 vx = zeros(1,N);
 vy = zeros(1,N);
-vx(1) = xx(2)-xx(1);       % starting velocity
-vy(1) = yy(2)-yy(1);
-vx(N) = xx(N)-xx(N-1);     % ending velocity
-vy(N) = yy(N)-yy(N-1);
+vx(1) = (xx(2)-xx(1)) / dt;      % starting velocity
+vy(1) = (yy(2)-yy(1)) / dt;
+vx(N) = (xx(N)-xx(N-1)) / dt;     % ending velocity
+vy(N) = (yy(N)-yy(N-1)) / dt;
 for i=2:N-1
   % intermediate velocities are the average with respect to points before and after
   vx(i) = ((xx(i)-xx(i-1)) + (xx(i+1)-xx(i)))/2;
