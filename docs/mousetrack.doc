@@ -21,18 +21,20 @@ where @m{v(k)} is the measurement noise, estimated by a Gaussian @m{\mathcal{N}(
 We want to estimate the belief function of @m{s},
 @M{\beta(s_k) = \mathcal{N}(\mu_k, \Sigma_k, s_k)}
 
+From the previous belief function @m{\beta(s_{k-1})}, we expect the unfiltered estimation of the current state is described by
+@M{\hat{\mu}(k|k-1) = A\mu(k-1)}
+@M{\hat{\Sigma}(k|k-1) = A\Sigma(k-1)A^T + Q}
 The Kalman gain is
-@M{K(k) = \Sigma(k|k-1)C^T[C\Sigma(k|k-1)C^T + R]^{-1}}
+@M{K(k) = \hat{\Sigma}(k|k-1)C^T[C\hat{\Sigma}(k|k-1)C^T + R]^{-1}}
 
 The filtered state is
-@M{\hat{s}(k|k) = \hat{s}(k|k-1) + K(k)\tilde{m}(k)}
-@M{\Sigma(k|k) = [\mathcal{I} - K(k)C] \Sigma(k|k-1)}
-where @m{\tilde{m} = m(k) - C\hat{s}(k|k-1)} is the measurement residual.
+@M{\mu(k|k) = \hat{\mu}(k|k-1) + K(k)\tilde{m}(k)}
+@M{\Sigma(k|k) = [\mathcal{I} - K(k)C] \hat{\Sigma}(k|k-1)}
+where @m{\tilde{m} = m(k) - C\hat{\mu}(k|k-1)} is the measurement residual.
 
 Finally, future state predictions are given by
-@M{\hat{s}(k+1|k) = A\hat{s}(k|k)}
+@M{\mu(k+1|k) = A\mu(k|k)}
 @M{\Sigma(k+1|k) = A\Sigma(k|k)A^T + Q}
-@M{\Sigma(k) = E\{[s(k) - \hat{s}(k)][s(k)-\hat{s}(k)]^T\}}
 
 @subsection{State and measurement models in radar tracking}
 
@@ -79,7 +81,9 @@ Notes:
 
 @subsection{Process covariance}
 
-Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time @m{T \ll \tau_m} the maneuver time constant. The resulting covariance is state here without derivation. [Blackman book, Page 33]
+Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time @m{T \ll \tau_m} the maneuver time constant. The resulting covariance is stated here without derivation, adapted from [Blackman book, Page 33].
+
+TODO: derive, model other noise
 
 @M{
 Q = \frac{2\sigma^2_m}{\tau_m}
@@ -113,12 +117,12 @@ Assume that @m{(\mathbf{x} - \bar{\mathbf{x}})} is zero-mean with covariance @m{
 \bar{\mathbf{y}} = E(\mathbf{y}) &= E(f(\bar{\mathbf{x}})) + \nabla fE(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}E((\mathbf{x} - \bar{\mathbf{x}})^2) \nonumber \\
 &= f(\bar{\mathbf{x}}) + \frac{\nabla^2f}{2}\mathbf{\Sigma_x}
 }
-@M{\tag{y_var}
+@M{
 \mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &= \nabla fE((\mathbf{x} - \bar{\mathbf{x}})^2)(\nabla f)^T \nonumber \\
-&= \nabla f\mathbf{\Sigma_x}(\nabla f)^T
+&= \nabla f\mathbf{\Sigma_x}(\nabla f)^T \label{eq:y_var}
 }
 
-Apply @eqref{y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, @m{\nabla f = \mathbf{J}_f} the Jacobian matrix,
+Apply @eqref{eq:y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, @m{\nabla f = \mathbf{J}_f} the Jacobian matrix,
 @M{
 R &= \mathbf{J}
 \begin{bmatrix}
