@@ -167,15 +167,6 @@ y(k+1) = y(k) + T\dot{y}(k) + \frac{T^2}{2}\ddot{y}(k)
 \end{align}\]
 <p>The state update model is </p>
 \[\begin{align}
-\begin{gather*}
-s(k+1) = As(k) \nonumber \\
-s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
-A = \begin{bmatrix} 1 &amp; T &amp; 0 &amp; 0 \\
-                    0 &amp; 1 &amp; 0 &amp; 0 \\
-		    0 &amp; 0 &amp; 1 &amp; T \\
-		    0 &amp; 0 &amp; 0 &amp; 1 \end{bmatrix}
-\end{gather*}\end{align}\]
-\[\begin{align}
 s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
 A = \begin{bmatrix} 1 &amp; T &amp; 0 &amp; 0 \\
                     0 &amp; 1 &amp; 0 &amp; 0 \\
@@ -220,20 +211,22 @@ Q = \frac{2\sigma^2_m}{\tau_m}
 <p>is a function of the raw radar measurements' variances.</p>
 <p>Consider a general transformation of a random variable \(\mathbf{x}\), with mean \(\bar{\mathbf{x}}\) and covariance \(\mathbf{\Sigma_x}\), to a new random variable \(\mathbf{y}\) by the nonlinear function \(f\) </p>
 \[\begin{align}\mathbf{y} = f(\mathbf{x})\end{align}\]
-<p>We apply Taylor expansion around \(\bar{\mathbf{x}}\) </p>
+<p>We apply Taylor expansion around \(\bar{\mathbf{x}}\), using subscript-summation notation, </p>
 \[\begin{align}
-f(\mathbf{x}) = f(\bar{\mathbf{x}}) + \nabla f(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}(\mathbf{x} - \bar{\mathbf{x}})^2
+f_i(\mathbf{x}) &amp;= f_i(\bar{\mathbf{x}}) + \frac{\partial f_i}{\partial x_j}(x_j-\bar{x}_j) + \frac{1}{2}\frac{\partial^2f_i}{\partial x_j \partial x_k}(x_j - \bar{x}_j)(x_k - \bar{x}_k) \nonumber \\
+&amp;= f_i(\bar{\mathbf{x}}) + \mathbf{J}_i(\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2}(\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}_i(\mathbf{x} - \bar{\mathbf{x}})
 \end{align}\]
-<p>Assume that \((\mathbf{x} - \bar{\mathbf{x}})\) is zero-mean with covariance \(\mathbf{\Sigma_x}\), take the expectation value to get \(\bar{\mathbf{y}}\) and \(\mathbf{\Sigma_y}\) </p>
+<p>where \(\mathbf{J}_i\) is the i-th row of the Jacobian matrix, and \(\mathbf{H}_i\) is the i-th plane of the 3-dimensional Hessian tensor. Assume that \((\mathbf{x} - \bar{\mathbf{x}})\) is zero-mean with covariance \(\mathbf{\Sigma_x}\), take the expectation value to get \(\bar{\mathbf{y}}\) and \(\mathbf{\Sigma_y}\) </p>
 \[\begin{align}
-\bar{\mathbf{y}} = E(\mathbf{y}) &amp;= E(f(\bar{\mathbf{x}})) + \nabla fE(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}E((\mathbf{x} - \bar{\mathbf{x}})^2) \nonumber \\
-&amp;= f(\bar{\mathbf{x}}) + \frac{\nabla^2f}{2}\mathbf{\Sigma_x}
+\bar{\mathbf{y}} = E(\mathbf{y}) &amp;= E(f(\bar{\mathbf{x}})) + \mathbf{J} E(\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2}E((\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}(\mathbf{x} - \bar{\mathbf{x}})) \nonumber \\
+&amp;= f(\bar{\mathbf{x}}) + \frac{1}{2}E((\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}(\mathbf{x} - \bar{\mathbf{x}})) \nonumber \\
+&amp;\approx f(\bar{\mathbf{x}})
 \end{align}\]
 \[\begin{align}
-\mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &amp;= \nabla fE((\mathbf{x} - \bar{\mathbf{x}})^2)(\nabla f)^T \nonumber \\
-&amp;= \nabla f\mathbf{\Sigma_x}(\nabla f)^T \label{eq:y_var}
+\mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &amp;= \mathbf{J}E((\mathbf{x} - \bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})^T)\mathbf{J}^T \nonumber \\
+&amp;= \mathbf{J}\mathbf{\Sigma_x}\mathbf{J}^T \label{eq:y_var}
 \end{align}\]
-<p>Apply \eqref{eq:eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f = \{r\cos\theta, r\sin\theta, r\dot{r}\}\), \(\nabla f = \mathbf{J}_f\) the Jacobian matrix, </p>
+<p>Apply \eqref{eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f(\mathbf{x}) = \{r\cos\theta, r\sin\theta, r\dot{r}\}\), assume the variances of \(\{r, \dot{r}, \theta\}\) are not correlated, </p>
 \[\begin{align}
 R &amp;= \mathbf{J}
 \begin{bmatrix}

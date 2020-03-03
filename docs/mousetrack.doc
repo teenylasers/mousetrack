@@ -46,16 +46,6 @@ y(k+1) = y(k) + T\dot{y}(k) + \frac{T^2}{2}\ddot{y}(k)
 
 The state update model is
 @M{
-\begin{gather*}
-s(k+1) = As(k) \nonumber \\
-s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
-A = \begin{bmatrix} 1 & T & 0 & 0 \\
-                    0 & 1 & 0 & 0 \\
-		    0 & 0 & 1 & T \\
-		    0 & 0 & 0 & 1 \end{bmatrix}
-\end{gather*}}
-
-@M{
 s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
 A = \begin{bmatrix} 1 & T & 0 & 0 \\
                     0 & 1 & 0 & 0 \\
@@ -108,21 +98,24 @@ is a function of the raw radar measurements' variances.
 
 Consider a general transformation of a random variable @m{\mathbf{x}}, with mean @m{\bar{\mathbf{x}}} and covariance @m{\mathbf{\Sigma_x}}, to a new random variable @m{\mathbf{y}} by the nonlinear function @m{f}
 @M{\mathbf{y} = f(\mathbf{x})}
-We apply Taylor expansion around @m{\bar{\mathbf{x}}}
+We apply Taylor expansion around @m{\bar{\mathbf{x}}}, using subscript-summation notation,
 @M{
-f(\mathbf{x}) = f(\bar{\mathbf{x}}) + \nabla f(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}(\mathbf{x} - \bar{\mathbf{x}})^2
+f_i(\mathbf{x}) &= f_i(\bar{\mathbf{x}}) + \frac{\partial f_i}{\partial x_j}(x_j-\bar{x}_j) + \frac{1}{2}\frac{\partial^2f_i}{\partial x_j \partial x_k}(x_j - \bar{x}_j)(x_k - \bar{x}_k) \nonumber \\
+&= f_i(\bar{\mathbf{x}}) + \mathbf{J}_i(\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2}(\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}_i(\mathbf{x} - \bar{\mathbf{x}})
 }
+where @m{\mathbf{J}_i} is the i-th row of the Jacobian matrix, and @m{\mathbf{H}_i} is the i-th plane of the 3-dimensional Hessian tensor.
 Assume that @m{(\mathbf{x} - \bar{\mathbf{x}})} is zero-mean with covariance @m{\mathbf{\Sigma_x}}, take the expectation value to get @m{\bar{\mathbf{y}}} and @m{\mathbf{\Sigma_y}}
 @M{
-\bar{\mathbf{y}} = E(\mathbf{y}) &= E(f(\bar{\mathbf{x}})) + \nabla fE(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}E((\mathbf{x} - \bar{\mathbf{x}})^2) \nonumber \\
-&= f(\bar{\mathbf{x}}) + \frac{\nabla^2f}{2}\mathbf{\Sigma_x}
+\bar{\mathbf{y}} = E(\mathbf{y}) &= E(f(\bar{\mathbf{x}})) + \mathbf{J} E(\mathbf{x} - \bar{\mathbf{x}}) + \frac{1}{2}E((\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}(\mathbf{x} - \bar{\mathbf{x}})) \nonumber \\
+&= f(\bar{\mathbf{x}}) + \frac{1}{2}E((\mathbf{x} - \bar{\mathbf{x}})^T\mathbf{H}(\mathbf{x} - \bar{\mathbf{x}})) \nonumber \\
+&\approx f(\bar{\mathbf{x}})
 }
 @M{
-\mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &= \nabla fE((\mathbf{x} - \bar{\mathbf{x}})^2)(\nabla f)^T \nonumber \\
-&= \nabla f\mathbf{\Sigma_x}(\nabla f)^T \label{eq:y_var}
+\mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &= \mathbf{J}E((\mathbf{x} - \bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})^T)\mathbf{J}^T \nonumber \\
+&= \mathbf{J}\mathbf{\Sigma_x}\mathbf{J}^T \label{eq:y_var}
 }
 
-Apply @eqref{eq:y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, @m{\nabla f = \mathbf{J}_f} the Jacobian matrix,
+Apply @eqref{y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f(\mathbf{x}) = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, assume the variances of @m{\{r, \dot{r}, \theta\}} are not correlated,
 @M{
 R &= \mathbf{J}
 \begin{bmatrix}
