@@ -16,6 +16,7 @@ docs: dirs
 
 docs2:
 	$(DOCCER) ../docs/mousetrack.doc | sed 's@__MATHJAX__@$(MATHJAX_PUBLIC)@' | sed 's@__TITLE__@mousetrack@' > mousetrack.html
+	cp mousetrack.html ../docs/mousetrack.html
 
 clean:
 	rm -rf build

@@ -147,16 +147,18 @@ tt {
 <p>where \(v(k)\) is the measurement noise, estimated by a Gaussian \(\mathcal{N}(0, R)\).</p>
 <p>We want to estimate the belief function of \(s\), </p>
 \[\begin{align}\beta(s_k) = \mathcal{N}(\mu_k, \Sigma_k, s_k)\end{align}\]
+<p>From the previous belief function \(\beta(s_{k-1})\), we expect the unfiltered estimation of the current state is described by </p>
+\[\begin{align}\hat{\mu}(k|k-1) = A\mu(k-1)\end{align}\]
+\[\begin{align}\hat{\Sigma}(k|k-1) = A\Sigma(k-1)A^T + Q\end{align}\]
 <p>The Kalman gain is </p>
-\[\begin{align}K(k) = \Sigma(k|k-1)C^T[C\Sigma(k|k-1)C^T + R]^{-1}\end{align}\]
+\[\begin{align}K(k) = \hat{\Sigma}(k|k-1)C^T[C\hat{\Sigma}(k|k-1)C^T + R]^{-1}\end{align}\]
 <p>The filtered state is </p>
-\[\begin{align}\hat{s}(k|k) = \hat{s}(k|k-1) + K(k)\tilde{m}(k)\end{align}\]
-\[\begin{align}\Sigma(k|k) = [\mathcal{I} - K(k)C] \Sigma(k|k-1)\end{align}\]
-<p>where \(\tilde{m} = m(k) - C\hat{s}(k|k-1)\) is the measurement residual.</p>
+\[\begin{align}\mu(k|k) = \hat{\mu}(k|k-1) + K(k)\tilde{m}(k)\end{align}\]
+\[\begin{align}\Sigma(k|k) = [\mathcal{I} - K(k)C] \hat{\Sigma}(k|k-1)\end{align}\]
+<p>where \(\tilde{m} = m(k) - C\hat{\mu}(k|k-1)\) is the measurement residual.</p>
 <p>Finally, future state predictions are given by </p>
-\[\begin{align}\hat{s}(k+1|k) = A\hat{s}(k|k)\end{align}\]
+\[\begin{align}\mu(k+1|k) = A\mu(k|k)\end{align}\]
 \[\begin{align}\Sigma(k+1|k) = A\Sigma(k|k)A^T + Q\end{align}\]
-\[\begin{align}\Sigma(k) = E\{[s(k) - \hat{s}(k)][s(k)-\hat{s}(k)]^T\}\end{align}\]
 <h3 class='section_entry' id='1.2.'>1.2. State and measurement models in radar tracking</h3>
 <p>Radar measurements are in polar coordinates. We choose to track in cartesian coordinates for a more intuitive model of target motion. For a radar scan interval of time \(T\), target motions are simply </p>
 \[\begin{align}
@@ -196,7 +198,8 @@ m(k) &amp;= Cs(k) \nonumber \\
 
 </ul>
 <h3 class='section_entry' id='1.3.'>1.3. Process covariance</h3>
-<p>Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time \(T \ll \tau_m\) the maneuver time constant. The resulting covariance is state here without derivation. [Blackman book, Page 33]</p>
+<p>Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time \(T \ll \tau_m\) the maneuver time constant. The resulting covariance is stated here without derivation, adapted from [Blackman book, Page 33].</p>
+<p>TODO: derive, model other noise</p>
 \[\begin{align}
 Q = \frac{2\sigma^2_m}{\tau_m}
 \begin{bmatrix}
@@ -226,11 +229,11 @@ f(\mathbf{x}) = f(\bar{\mathbf{x}}) + \nabla f(\mathbf{x} - \bar{\mathbf{x}}) + 
 \bar{\mathbf{y}} = E(\mathbf{y}) &amp;= E(f(\bar{\mathbf{x}})) + \nabla fE(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}E((\mathbf{x} - \bar{\mathbf{x}})^2) \nonumber \\
 &amp;= f(\bar{\mathbf{x}}) + \frac{\nabla^2f}{2}\mathbf{\Sigma_x}
 \end{align}\]
-\[\begin{align}\tag{y_var}
+\[\begin{align}
 \mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &amp;= \nabla fE((\mathbf{x} - \bar{\mathbf{x}})^2)(\nabla f)^T \nonumber \\
-&amp;= \nabla f\mathbf{\Sigma_x}(\nabla f)^T
+&amp;= \nabla f\mathbf{\Sigma_x}(\nabla f)^T \label{eq:y_var}
 \end{align}\]
-<p>Apply \eqref{eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f = \{r\cos\theta, r\sin\theta, r\dot{r}\}\), \(\nabla f = \mathbf{J}_f\) the Jacobian matrix, </p>
+<p>Apply \eqref{eq:eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f = \{r\cos\theta, r\sin\theta, r\dot{r}\}\), \(\nabla f = \mathbf{J}_f\) the Jacobian matrix, </p>
 \[\begin{align}
 R &amp;= \mathbf{J}
 \begin{bmatrix}
