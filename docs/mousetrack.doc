@@ -1,0 +1,134 @@
+
+@title{Mousetrack}
+@author{jq}
+
+@contents{}
+
+@section{Kalman Filter}
+
+Apply Kalman Filter for a single track. For long-range autonomous driving tracking problems, we can assume a 2D tracking space, where there is no need for z or elevation information.
+
+@subsection{General problem statement}
+
+The state is modeled by
+@M{s(k+1) = As(k) + w(k) + f(k+1|k)}
+where @m{w(k)} represents the process noise, estimated by a Gaussian @m{\mathcal{N}(0, Q)}, and @m{f(k+1|k)} denotes a deterministic input such as relative position change due to own-ship motion.
+
+Measurements are modeled by
+@M{m(k) = Cs(k) + v(k)}
+where @m{v(k)} is the measurement noise, estimated by a Gaussian @m{\mathcal{N}(0, R)}.
+
+We want to estimate the belief function of @m{s},
+@M{\beta(s_k) = \mathcal{N}(\mu_k, \Sigma_k, s_k)}
+
+The Kalman gain is
+@M{K(k) = \Sigma(k|k-1)C^T[C\Sigma(k|k-1)C^T + R]^{-1}}
+
+The filtered state is
+@M{\hat{s}(k|k) = \hat{s}(k|k-1) + K(k)\tilde{m}(k)}
+@M{\Sigma(k|k) = [\mathcal{I} - K(k)C] \Sigma(k|k-1)}
+where @m{\tilde{m} = m(k) - C\hat{s}(k|k-1)} is the measurement residual.
+
+Finally, future state predictions are given by
+@M{\hat{s}(k+1|k) = A\hat{s}(k|k)}
+@M{\Sigma(k+1|k) = A\Sigma(k|k)A^T + Q}
+@M{\Sigma(k) = E\{[s(k) - \hat{s}(k)][s(k)-\hat{s}(k)]^T\}}
+
+@subsection{State and measurement models in radar tracking}
+
+Radar measurements are in polar coordinates. We choose to track in cartesian coordinates for a more intuitive model of target motion. For a radar scan interval of time @m{T}, target motions are simply
+@M{
+x(k+1) = x(k) + T\dot{x}(k) + \frac{T^2}{2}\ddot{x}(k) \nonumber \\
+y(k+1) = y(k) + T\dot{y}(k) + \frac{T^2}{2}\ddot{y}(k)
+}
+
+The state update model is
+@M{
+\begin{gather*}
+s(k+1) = As(k) \nonumber \\
+s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
+A = \begin{bmatrix} 1 & T & 0 & 0 \\
+                    0 & 1 & 0 & 0 \\
+		    0 & 0 & 1 & T \\
+		    0 & 0 & 0 & 1 \end{bmatrix}
+\end{gather*}}
+
+@M{
+s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
+A = \begin{bmatrix} 1 & T & 0 & 0 \\
+                    0 & 1 & 0 & 0 \\
+		    0 & 0 & 1 & T \\
+		    0 & 0 & 0 & 1 \end{bmatrix}
+}
+
+The measurement model that bridges polar to cartesian coordinates is
+@M{
+m(k) &= Cs(k) \nonumber \\
+\begin{bmatrix} x \\ y \\ r\dot{r} \end{bmatrix} = \begin{bmatrix} r \cos(\theta) \\ r \sin(\theta) \\ r\dot{r} \end{bmatrix} &=
+\begin{bmatrix} 1 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 0 \\
+		\dot{x} & x & \dot{y} & y
+\end{bmatrix}
+\begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix}
+}
+
+Notes:
+@list{
+@* Acceleration is not included in the state model for now.
+}
+
+@subsection{Process covariance}
+
+Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time @m{T \ll \tau_m} the maneuver time constant. The resulting covariance is state here without derivation. [Blackman book, Page 33]
+
+@M{
+Q = \frac{2\sigma^2_m}{\tau_m}
+\begin{bmatrix}
+\frac{T^5}{20} & \frac{T^4}{8} & 0 & 0 \\
+\frac{T^4}{8} & \frac{T^3}{3} & 0 & 0 \\
+0 & 0 & \frac{T^5}{20} & \frac{T^4}{8} \\
+0 & 0 & \frac{T^4}{8} & \frac{T^3}{3}
+\end{bmatrix}
+}
+
+@subsection{Coordinate transform for measurement covariance}
+
+Radar measurements typically consists of @m{\{r, \dot{r}, \theta\}} with variances @m{\{\sigma^2_r, \sigma^2_{\dot{r}}, \sigma^2_\theta\}}. We wish to calculate the covariance of the measurement noise @m{\mathcal{N}(0, R)}, where
+@M{R =
+\begin{bmatrix}
+\sigma^2_{xx} & \sigma^2_{xy} & \sigma^2_{xr\dot{r}} \\
+\sigma^2_{xy} &  \sigma^2_{yy} & \sigma^2_{yr\dot{r}} \\
+\sigma^2_{xr\dot{r}} & \sigma^2_{yr\dot{r}} & \sigma^2_{r\dot{r}r\dot{r}}
+\end{bmatrix}}
+is a function of the raw radar measurements' variances.
+
+Consider a general transformation of a random variable @m{\mathbf{x}}, with mean @m{\bar{\mathbf{x}}} and covariance @m{\mathbf{\Sigma_x}}, to a new random variable @m{\mathbf{y}} by the nonlinear function @m{f}
+@M{\mathbf{y} = f(\mathbf{x})}
+We apply Taylor expansion around @m{\bar{\mathbf{x}}}
+@M{
+f(\mathbf{x}) = f(\bar{\mathbf{x}}) + \nabla f(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}(\mathbf{x} - \bar{\mathbf{x}})^2
+}
+Assume that @m{(\mathbf{x} - \bar{\mathbf{x}})} is zero-mean with covariance @m{\mathbf{\Sigma_x}}, take the expectation value to get @m{\bar{\mathbf{y}}} and @m{\mathbf{\Sigma_y}}
+@M{
+\bar{\mathbf{y}} = E(\mathbf{y}) &= E(f(\bar{\mathbf{x}})) + \nabla fE(\mathbf{x} - \bar{\mathbf{x}}) + \frac{\nabla^2f}{2}E((\mathbf{x} - \bar{\mathbf{x}})^2) \nonumber \\
+&= f(\bar{\mathbf{x}}) + \frac{\nabla^2f}{2}\mathbf{\Sigma_x}
+}
+@M{\tag{y_var}
+\mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &= \nabla fE((\mathbf{x} - \bar{\mathbf{x}})^2)(\nabla f)^T \nonumber \\
+&= \nabla f\mathbf{\Sigma_x}(\nabla f)^T
+}
+
+Apply @eqref{y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, @m{\nabla f = \mathbf{J}_f} the Jacobian matrix,
+@M{
+R &= \mathbf{J}
+\begin{bmatrix}
+\sigma^2_r & 0 & 0 \\
+0 & \sigma^2_\theta & 0 \\
+0 & 0 & \sigma^2_\dot{r}
+\end{bmatrix} \mathbf{J}^T \nonumber \\
+&= \begin{bmatrix}
+\sigma^2_r\cos^2\theta + r^2\sigma^2_\theta\sin^2\theta & \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & \dot{r}\sigma^2_r\cos\theta \\
+\cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & r^2\sigma^2_\theta\cos^2\theta + \sigma^2_r\sin^2\theta & \dot{r}\sigma^2_r\sin\theta \\
+\dot{r}\sigma^2_r\cos\theta & \dot{r}\sigma^2_r\sin\theta & \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
+\end{bmatrix}
+}
