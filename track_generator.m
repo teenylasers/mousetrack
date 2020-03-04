@@ -45,12 +45,12 @@ vx = zeros(1,N);
 vy = zeros(1,N);
 vx(1) = (xx(2)-xx(1)) / dt;      % starting velocity
 vy(1) = (yy(2)-yy(1)) / dt;
-vx(N) = (xx(N)-xx(N-1)) / dt;     % ending velocity
+vx(N) = (xx(N)-xx(N-1)) / dt;    % ending velocity
 vy(N) = (yy(N)-yy(N-1)) / dt;
 for i=2:N-1
   % intermediate velocities are the average with respect to points before and after
-  vx(i) = ((xx(i)-xx(i-1)) + (xx(i+1)-xx(i)))/2;
-  vy(i) = ((yy(i)-yy(i-1)) + (yy(i+1)-yy(i)))/2;
+  vx(i) = ((xx(i)-xx(i-1)) + (xx(i+1)-xx(i)))/dt/2;
+  vy(i) = ((yy(i)-yy(i-1)) + (yy(i+1)-yy(i)))/dt/2;
 end
 
 track.x = xx;

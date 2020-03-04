@@ -39,17 +39,25 @@ radar_coords.R = ...
 
 % Generate radar detections from a track for time indices ti
 dets = [];
-beta = [];
-for ti = 1:1:(N-1)
+beliefs = [];
+for ti = 1:1:(N/2)
   new_dets = detections_generator(tracks, ti, radar_coords);
-  if length(beta) == 0
-
+  new_meas = convert_detection_to_measurement(new_dets);
+  if length(beliefs) == 0
+    new_belief = initiate_track(new_meas, new_dets);
+  else
+    [new_belief, predictions] = kalman_filter(new_meas, new_dets, dt, beliefs(end), []);
   end
-
   dets = [dets new_dets];
+  beliefs = [beliefs new_belief];
 end
 
 % Visualize the track(s) and measurements
-visualize_tracks_dets(tracks, dets, radar_coords);
+visualize_tracks_dets(tracks, dets, radar_coords, 1, 1);
+%xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
+%ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
+
+% Visualize the track(s) and predictions
+visualize_tracks_predictions(tracks, beliefs, [], 0, 0);
 xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
 ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);

@@ -1,8 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Visualization: overlay detections in the radar frame on track in the global frame
-function visualize_tracks_det(tracks, det, radar_coords)
+function visualize_tracks_dets(tracks, dets, radar_coords, new_fig, hold_on)
 
-figure; hold on;
+if new_fig
+  figure; hold on;
+end
 
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
@@ -12,25 +14,27 @@ for i = 1:length(tracks)
 end
 
 % Transform detections for plot visualization
-all_det = transform_detections(det, radar_coords);
+all_dets = transform_detections(dets, radar_coords);
 
 % Plot the noisy and noise-free detections
-h1 = polar(all_det.theta + radar_coords.bearing, all_det.r, 'o');
-h0 = polar(all_det.theta0 + radar_coords.bearing, all_det.r0, 'x');
+h1 = polar(all_dets.theta + radar_coords.bearing, all_dets.r, 'o');
+h0 = polar(all_dets.theta0 + radar_coords.bearing, all_dets.r0, 'x');
 plot_rdot = 1;
 if plot_rdot
   det_colour = get(h1, 'Color');
-  quiver(all_det.xy(1,:), all_det.xy(2,:), all_det.vxy(1,:), all_det.vxy(2,:), ...
-      'Color', det_colour, 'AutoScaleFactor', 5);
+  quiver(all_dets.xy(1,:), all_dets.xy(2,:), all_dets.vxy(1,:), all_dets.vxy(2,:), ...
+      'Color', det_colour);
   det0_color = get(h0, 'Color');
-  quiver(all_det.xy0(1,:), all_det.xy0(2,:), all_det.vxy0(1,:), all_det.vxy0(2,:), ...
-      'Color', det0_color, 'AutoScaleFactor', 10);
+  quiver(all_dets.xy0(1,:), all_dets.xy0(2,:), all_dets.vxy0(1,:), all_dets.vxy0(2,:), ...
+      'Color', det0_color);
 end
 % TODO: plot error-free detections with covariances.
 
 legend('track waypoints', 'track true path', 'track true velocity', ...
     'noisy detections', 'noise-free detections', 'Location', 'northwest');
-hold off;
+if ~hold_on
+  hold off;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Tests:
@@ -39,32 +43,32 @@ hold off;
 % Change radar location and bearing.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function accumulateDet4Plot
+% function transform_detections
 %
 % Transform time sequenced detections for plotting and visualization
 %
 
-function all_det = transform_detections(det, radar_coords)
+function all_dets = transform_detections(dets, radar_coords)
 
-% all_det.r = zeros(1, length(det));
-% all_det.r_dot = zeros(1, length(det));
-% all_det.theta = zeros(1, length(det));
-% all_det.xy = zeros(2, length(det));
-% all_det.vxy = zeros(2, length(det));
-for i = 1:length(det)
-  all_det.r(i) = det(i).r;
-  all_det.r_dot(i) = det(i).r_dot;
-  all_det.theta(i) = det(i).theta;
-  all_det.xy(:,i) = radar_coords.p + ...
-      det(i).r * radar_coords.R * [cos(det(i).theta); sin(det(i).theta)];
-  all_det.vxy(:,i) = radar_coords.p + ...
-      det(i).r_dot * radar_coords.R * [cos(det(i).theta); sin(det(i).theta)];
+% all_dets.r = zeros(1, length(dets));
+% all_dets.r_dot = zeros(1, length(dets));
+% all_dets.theta = zeros(1, length(dets));
+% all_dets.xy = zeros(2, length(dets));
+% all_dets.vxy = zeros(2, length(dets));
+for i = 1:length(dets)
+  all_dets.r(i) = dets(i).r;
+  all_dets.r_dot(i) = dets(i).r_dot;
+  all_dets.theta(i) = dets(i).theta;
+  all_dets.xy(:,i) = radar_coords.p + ...
+      dets(i).r * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
+  all_dets.vxy(:,i) = radar_coords.p + ...
+      dets(i).r_dot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
 
-  all_det.r0(i) = det(i).r0;
-  all_det.r_dot0(i) = det(i).r_dot0;
-  all_det.theta0(i) = det(i).theta0;
-  all_det.xy0(:,i) = radar_coords.p + ...
-      det(i).r0 * radar_coords.R * [cos(det(i).theta0); sin(det(i).theta0)];
-  all_det.vxy0(:,i) = radar_coords.p + ...
-      det(i).r_dot0 * radar_coords.R * [cos(det(i).theta0); sin(det(i).theta0)];
+  all_dets.r0(i) = dets(i).r0;
+  all_dets.r_dot0(i) = dets(i).r_dot0;
+  all_dets.theta0(i) = dets(i).theta0;
+  all_dets.xy0(:,i) = radar_coords.p + ...
+      dets(i).r0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
+  all_dets.vxy0(:,i) = radar_coords.p + ...
+      dets(i).r_dot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
 end

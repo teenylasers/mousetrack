@@ -176,13 +176,14 @@ A = \begin{bmatrix} 1 &amp; T &amp; 0 &amp; 0 \\
 <p>The measurement model that bridges polar to cartesian coordinates is </p>
 \[\begin{align}
 m(k) &amp;= Cs(k) \nonumber \\
-\begin{bmatrix} x \\ y \\ r\dot{r} \end{bmatrix} = \begin{bmatrix} r \cos(\theta) \\ r \sin(\theta) \\ r\dot{r} \end{bmatrix} &amp;=
+\begin{bmatrix} x \\ y \\ r\dot{r} \end{bmatrix} = \begin{bmatrix} -r \sin(\theta) \\ r \cos(\theta) \\ r\dot{r} \end{bmatrix} &amp;=
 \begin{bmatrix} 1 &amp; 0 &amp; 0 &amp; 0 \\
 		0 &amp; 0 &amp; 1 &amp; 0 \\
 		\dot{x} &amp; x &amp; \dot{y} &amp; y
 \end{bmatrix}
 \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix}
 \end{align}\]
+<p>TODO: the form of \(m = Cs\) comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments?</p>
 <p>Notes: </p>
 <ul>
 <li><p>Acceleration is not included in the state model for now. </p>
@@ -226,7 +227,7 @@ f_i(\mathbf{x}) &amp;= f_i(\bar{\mathbf{x}}) + \frac{\partial f_i}{\partial x_j}
 \mathbf{\Sigma_y} = E((\mathbf{y} - \bar{\mathbf{y}})(\mathbf{y} - \bar{\mathbf{y}})^T) &amp;= \mathbf{J}E((\mathbf{x} - \bar{\mathbf{x}})(\mathbf{x} - \bar{\mathbf{x}})^T)\mathbf{J}^T \nonumber \\
 &amp;= \mathbf{J}\mathbf{\Sigma_x}\mathbf{J}^T \label{eq:y_var}
 \end{align}\]
-<p>Apply \eqref{eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f(\mathbf{x}) = \{r\cos\theta, r\sin\theta, r\dot{r}\}\), assume the variances of \(\{r, \dot{r}, \theta\}\) are not correlated, </p>
+<p>Apply \eqref{eq:y_var} to the measurement model, we have \(\mathbf{x} = \{r, \theta, \dot{r}\}\), \(f(\mathbf{x}) = \{-r\sin\theta, r\cos\theta, r\dot{r}\}\), assume the variances of \(\{r, \dot{r}, \theta\}\) are not correlated, </p>
 \[\begin{align}
 R &amp;= \mathbf{J}
 \begin{bmatrix}
@@ -235,9 +236,9 @@ R &amp;= \mathbf{J}
 0 &amp; 0 &amp; \sigma^2_\dot{r}
 \end{bmatrix} \mathbf{J}^T \nonumber \\
 &amp;= \begin{bmatrix}
-\sigma^2_r\cos^2\theta + r^2\sigma^2_\theta\sin^2\theta &amp; \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; \dot{r}\sigma^2_r\cos\theta \\
-\cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; r^2\sigma^2_\theta\cos^2\theta + \sigma^2_r\sin^2\theta &amp; \dot{r}\sigma^2_r\sin\theta \\
-\dot{r}\sigma^2_r\cos\theta &amp; \dot{r}\sigma^2_r\sin\theta &amp; \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
+\sigma^2_r\sin^2\theta + r^2\sigma^2_\theta\cos^2\theta &amp; \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; -\dot{r}\sigma^2_r\sin\theta \\
+\cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; r^2\sigma^2_\theta\sin^2\theta + \sigma^2_r\cos^2\theta &amp; \dot{r}\sigma^2_r\cos\theta \\
+-\dot{r}\sigma^2_r\sin\theta &amp; \dot{r}\sigma^2_r\cos\theta &amp; \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
 \end{bmatrix}
 \end{align}\]
 

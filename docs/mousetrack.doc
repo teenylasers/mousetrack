@@ -56,13 +56,14 @@ A = \begin{bmatrix} 1 & T & 0 & 0 \\
 The measurement model that bridges polar to cartesian coordinates is
 @M{
 m(k) &= Cs(k) \nonumber \\
-\begin{bmatrix} x \\ y \\ r\dot{r} \end{bmatrix} = \begin{bmatrix} r \cos(\theta) \\ r \sin(\theta) \\ r\dot{r} \end{bmatrix} &=
+\begin{bmatrix} x \\ y \\ r\dot{r} \end{bmatrix} = \begin{bmatrix} -r \sin(\theta) \\ r \cos(\theta) \\ r\dot{r} \end{bmatrix} &=
 \begin{bmatrix} 1 & 0 & 0 & 0 \\
 		0 & 0 & 1 & 0 \\
 		\dot{x} & x & \dot{y} & y
 \end{bmatrix}
 \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix}
 }
+TODO: the form of @m{m = Cs} comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments?
 
 Notes:
 @list{
@@ -115,7 +116,20 @@ Assume that @m{(\mathbf{x} - \bar{\mathbf{x}})} is zero-mean with covariance @m{
 &= \mathbf{J}\mathbf{\Sigma_x}\mathbf{J}^T \label{eq:y_var}
 }
 
-Apply @eqref{y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f(\mathbf{x}) = \{r\cos\theta, r\sin\theta, r\dot{r}\}}, assume the variances of @m{\{r, \dot{r}, \theta\}} are not correlated,
+Apply @eqref{y_var} to the measurement model, we have @m{\mathbf{x} = \{r, \theta, \dot{r}\}}, @m{f(\mathbf{x}) = \{-r\sin\theta, r\cos\theta, r\dot{r}\}}, assume the variances of @m{\{r, \dot{r}, \theta\}} are not correlated,
+# @M{
+# R &= \mathbf{J}
+# \begin{bmatrix}
+# \sigma^2_r & 0 & 0 \\
+# 0 & \sigma^2_\theta & 0 \\
+# 0 & 0 & \sigma^2_\dot{r}
+# \end{bmatrix} \mathbf{J}^T \nonumber \\
+# &= \begin{bmatrix}
+# \sigma^2_r\cos^2\theta + r^2\sigma^2_\theta\sin^2\theta & \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & \dot{r}\sigma^2_r\cos\theta \\
+# \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & r^2\sigma^2_\theta\cos^2\theta + \sigma^2_r\sin^2\theta & \dot{r}\sigma^2_r\sin\theta \\
+# \dot{r}\sigma^2_r\cos\theta & \dot{r}\sigma^2_r\sin\theta & \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
+# \end{bmatrix}
+# }
 @M{
 R &= \mathbf{J}
 \begin{bmatrix}
@@ -124,8 +138,8 @@ R &= \mathbf{J}
 0 & 0 & \sigma^2_\dot{r}
 \end{bmatrix} \mathbf{J}^T \nonumber \\
 &= \begin{bmatrix}
-\sigma^2_r\cos^2\theta + r^2\sigma^2_\theta\sin^2\theta & \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & \dot{r}\sigma^2_r\cos\theta \\
-\cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & r^2\sigma^2_\theta\cos^2\theta + \sigma^2_r\sin^2\theta & \dot{r}\sigma^2_r\sin\theta \\
-\dot{r}\sigma^2_r\cos\theta & \dot{r}\sigma^2_r\sin\theta & \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
+\sigma^2_r\sin^2\theta + r^2\sigma^2_\theta\cos^2\theta & \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & -\dot{r}\sigma^2_r\sin\theta \\
+\cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) & r^2\sigma^2_\theta\sin^2\theta + \sigma^2_r\cos^2\theta & \dot{r}\sigma^2_r\cos\theta \\
+-\dot{r}\sigma^2_r\sin\theta & \dot{r}\sigma^2_r\cos\theta & \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
 \end{bmatrix}
 }
