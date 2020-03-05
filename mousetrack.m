@@ -15,7 +15,7 @@ y_range.min = 0;
 y_range.max = y_range.min + y_size;
 
 % Detection update frequency = 10 Hz
-dt = 0.1;
+dt = 0.2;
 
 % Generate tracks, described in the global frame.
 % Estimate the amount of time a target takes to traverse the 2D space.
@@ -24,7 +24,7 @@ dt = 0.1;
 %  - traversal time ~ 40 s
 %  - average num updates N = 400
 %  - add round(randn) to slightly randomize target speed
-N = 400 + round(randn(1) * 22);
+N = 600/15/dt + round(randn(1) * 22);
 tracks(1) = track_generator(x_range, y_range, N, dt);
 
 % Set up the radar frame with respect to the global frame.
@@ -40,7 +40,7 @@ radar_coords.R = ...
 % Generate radar detections from a track for time indices ti
 dets = [];
 beliefs = [];
-for ti = 1:1:(N/2)
+for ti = 1:1:(N-1)
   new_dets = detections_generator(tracks, ti, radar_coords);
   new_meas = convert_detection_to_measurement(new_dets);
   if length(beliefs) == 0
@@ -50,14 +50,20 @@ for ti = 1:1:(N/2)
   end
   dets = [dets new_dets];
   beliefs = [beliefs new_belief];
+  % visualize_tracks_dets(tracks, dets, radar_coords, 0, 1);
+  % visualize_tracks_predictions(tracks, beliefs, [], 0, 0);
+  % xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
+  % ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
+  % disp('Press any key to continue.'); pause;
 end
 
 % Visualize the track(s) and measurements
 visualize_tracks_dets(tracks, dets, radar_coords, 1, 1);
-%xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
-%ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
+xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
+ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
 
 % Visualize the track(s) and predictions
 visualize_tracks_predictions(tracks, beliefs, [], 0, 0);
-xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
-ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
+% xlim([x_range.min-x_size*0.1 x_range.max+x_size*0.1]);
+% ylim([y_range.min-y_size*0.1 y_range.max+y_size*0.1]);
+legend('Location', 'northwest');

@@ -3,13 +3,14 @@
 function visualize_tracks_dets(tracks, dets, radar_coords, new_fig, hold_on)
 
 if new_fig
-  figure; hold on;
+  figure;
 end
 
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
   tr = tracks(i);
   plot(tr.wpts.x, tr.wpts.y, '.', tr.x, tr.y, '.');
+  hold on;
   quiver(tr.x, tr.y, tr.vx, tr.vy);
 end
 

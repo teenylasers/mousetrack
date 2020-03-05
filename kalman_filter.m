@@ -14,11 +14,6 @@
 
 function [new_belief, predictions] = kalman_filter(m, det, dt, prev_belief, future_times)
 
-predictions = [];
-new_belief.mu = [m(1); 0; m(2); 0];
-new_belief.sig = eye(length(m));
-return
-
 % Check input
 assert(length(prev_belief.mu) == prod(size(prev_belief.mu)));
 assert(size(prev_belief.sig, 1) == size(prev_belief.sig, 2));
@@ -36,10 +31,12 @@ sig_hat = A * prev_belief.sig * A' + Q;
 C = get_matrix_C(prev_belief.mu);
 R = get_covariance_R(det);
 % TODO: is inv() a good idea? numerical stability?
+% TODO: what happens when uncertainty gets too small for K = A*inv(B) to make sense?
+fprintf('Reciprocal condition number = %d', rcond(C * sig_hat * C' + R));
 K = sig_hat * C' * inv(C * sig_hat * C' + R);
 
 % Filtered estimate of the current state
-m_residual = m - C*mu_hat;
+m_residual = m - C*mu_hat
 new_belief.mu = mu_hat + K * m_residual;
 new_belief.sig = (eye(num_state_dims) - K * C) * sig_hat;
 
@@ -69,13 +66,25 @@ A = [1 dt  0  0;
 function Q = get_covariance_Q(dt)
 % Using Singer model for sampling time << acceleration/maneuvering time
 % From Blackman Page 33 without derivation
-sig_m = 1; % TODO: set realistic magnitudes
-tau = 1;
-Q = 2 * sig_m^2 / tau * ...
-    [dt^5/20 dt^4/8 0 0;
-     dt^4/8  dt^3/3 0 0;
-     0 0 dt^5/20 dt^4/8;
-     0 0 dt^4/8  dt^3/3];
+% sig_m = 5; % TODO: set realistic magnitudes
+% tau = 1;
+% Q = 2 * sig_m^2 / tau * ...
+%     [dt^5/20 dt^4/8 0 0;
+%      dt^4/8  dt^3/3 0 0;
+%      0 0 dt^5/20 dt^4/8;
+%      0 0 dt^4/8  dt^3/3];
+Q = [10 0 0 0;
+      0 0.1 0 0;
+      0 0 10 0;
+      0 0 0 0.1];
+
+% Using constant velocity model,
+% http://www.robots.ox.ac.uk/~ian/Teaching/Estimation/LectureNotes2.pdf
+% q = 1000;
+% Q = q * [dt^3/3 dt^2/2   0      0;
+%          dt^2/2   dt     0      0;
+% 	   0       0  dt^3/3 dt^2/2;
+% 	   0       0  dt^2/2   dt  ];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Measurement model
@@ -116,6 +125,6 @@ sig_yy = r^2 * sig_theta^2 * sin(theta)^2 + sig_r^2 * cos(theta)^2;
 sig_yrrdot = r_dot * sig_r^2 * cos(theta);
 sig_rrdot = r_dot^2 * sig_r^2 + r^2 * sig_rdot^2;
 
-R = [sig_xx sig_xy sig_xrrdot;
+R = 0.01 * [sig_xx sig_xy sig_xrrdot;
      sig_xy sig_yy sig_yrrdot;
      sig_xrrdot sig_yrrdot sig_rrdot];

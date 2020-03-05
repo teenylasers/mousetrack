@@ -3,23 +3,23 @@
 function visualize_tracks_predictions(tracks, beliefs, predictions, new_fig, hold_on)
 
 if new_fig
-  figure; hold on;
+  figure;
 end
 
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
   tr = tracks(i);
-  plot(tr.x, tr.y, '.');
+  plot(tr.x, tr.y, '.', 'DisplayName', 'track true path');
+  hold on;
   % quiver(tr.x, tr.y, tr.vx, tr.vy);
 end
 
 % Plot belief functions over time in the global frame
 all_beliefs = transform_beliefs(beliefs);
-h = plot(all_beliefs.x, all_beliefs.y, 'x');
+h = plot(all_beliefs.x, all_beliefs.y, '-', 'DisplayName', 'track estimation');
 belief_colour = get(h, 'Color');
 quiver(all_beliefs.x, all_beliefs.y, all_beliefs.xdot, all_beliefs.ydot, 'Color', belief_colour);
 
-%legend('track true path', 'track estimation');
 if ~hold_on
   hold off;
 end

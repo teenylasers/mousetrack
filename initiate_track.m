@@ -12,7 +12,7 @@ function belief = initiate_track(m, det)
 xdot = 0; % TODO: not correct
 ydot = 0; % TODO: not correct
 belief.mu = [m(1); xdot; m(2); ydot];
-belief.sig = [10  0   0  0;
-             0  1   0  0;
-	     0  0  10  0;
-	     0  0   0  1]; % TODO: not correct
+belief.sig = [10  0  0  0;
+              0  0.1  0  0;
+	      0  0  10  0;
+	      0  0  0  0.1]; % TODO: not correct
