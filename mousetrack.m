@@ -49,7 +49,7 @@ for ti = 1:N
   % ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
   % disp('Press any key to continue.\n'); pause;
 end
-evaluate_kalman_filter(tracks(1), beliefs, 1);
+evaluate_kalman_filter(tracks(1), dets, beliefs, 1);
 
 % Visualize the track(s) and measurements
 visualize_tracker_results(radar_coords, tracks, dets, beliefs);
