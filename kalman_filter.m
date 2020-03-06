@@ -23,7 +23,7 @@ prediction_length = length(future_times);
 
 % Unfiltered estimate of the current state
 A = get_matrix_A(dt);
-Q = get_covariance_Q(dt, det);
+Q = get_covariance_Q(dt);
 mu_hat = A * prev_belief.mu;
 sig_hat = A * prev_belief.sig * A' + Q;
 
@@ -69,7 +69,7 @@ A = [1 dt  0  0;
      0  0  1 dt;
      0  0  0  1];
 
-function Q = get_covariance_Q(dt, det)
+function Q = get_covariance_Q(dt)
 % Using Singer model for sampling time << acceleration/maneuvering time
 % From Blackman Page 33 without derivation
 % sig_m = 5; % TODO: set realistic magnitudes
@@ -79,31 +79,6 @@ function Q = get_covariance_Q(dt, det)
 %      dt^4/8  dt^3/3 0 0;
 %      0 0 dt^5/20 dt^4/8;
 %      0 0 dt^4/8  dt^3/3];
-
-% r = det.r;
-% theta = det.theta;
-% r_dot = det.r_dot;
-%
-% var = get_detection_variance(det);
-% sig_r = var.sig_r;
-% sig_rdot = var.sig_rdot;
-% sig_theta = var.sig_theta;
-%
-% sig_xx = sig_r^2 * sin(theta)^2 + r^2 * sig_theta^2 * cos(theta)^2;
-% sig_xxdot = r * r_dot * sig_theta^2 * cos(theta) * sin(theta);
-% sig_xy = cos(theta) * sin(theta) * (-sig_r^2 + r^2 * sig_theta^2);
-% sig_xydot = -r * r_dot * sig_theta^2 * cos(theta)^2;
-% sig_xdotxdot = sig_rdot^2 * cos(theta)^2 + r_dot^2 * sig_theta^2 * sin(theta)^2;
-% sig_yxdot = r * r_dot * sig_theta^2 * sin(theta)^2;
-% sig_xdotydot = (sig_rdot^2 - r_dot^2 * sig_theta^2) * cos(theta) * sin(theta);
-% sig_yy = r^2 * sig_theta^2 * sin(theta)^2 + sig_r^2 * cos(theta)^2;
-% sig_yydot = -r * r_dot * sig_theta^2 * cos(theta) * sin(theta);
-% sig_ydotydot = r_dot^2 * sig_theta^2 * cos(theta)^2 + sig_rdot^2 * sin(theta)^2;
-%
-% Q = 100 * [sig_xx sig_xxdot sig_xy sig_xydot;
-%      sig_xxdot sig_xdotxdot sig_yxdot sig_xdotydot;
-%      sig_xy sig_yxdot sig_yy sig_yydot;
-%      sig_xydot sig_xdotydot sig_yydot sig_ydotydot];
 
 Q = [10 0 0 0;
       0 0.5 0 0;
