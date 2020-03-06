@@ -13,10 +13,7 @@ m = convert_detection_to_measurement(dets(end));
 xdot = 0;
 ydot = 0;
 belief.mu = [m(1); xdot; m(2); ydot];
-belief.sig = [10  0  0  0;
-              0  0.1  0  0;
-	      0  0  10  0;
-	      0  0  0  0.1]; % TODO: not correct
+belief.sig = eye(4) * 1e9;
 belief.innov = [0; 0; 0];
 belief.innov_cov = zeros(3);
 

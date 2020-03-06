@@ -4,33 +4,37 @@ function visualize_tracker_results(radar_coords, tracks, dets, beliefs)
 
 figure; hold on;
 
-% Plot the tracks in the global frame
-for i = 1:length(tracks)
-  tr = tracks(i);
-  plot(tr.x, tr.y, '.');
-  % quiver(tr.x, tr.y, tr.vx, tr.vy);
-end
+% Set colors
+det_colour = [0.9290 0.6940 0.1250];
+truth_colour = [0 0.4470 0.7410];
+belief_colour = [0.8500 0.3250 0.0980];
 
 % Plot detections over time in the global frame
 all_dets = transform_detections(dets, radar_coords);
-h1 = polar(all_dets.theta + radar_coords.bearing, all_dets.r, 'o');
+h = polar(all_dets.theta + radar_coords.bearing, all_dets.r, 'o');
+h.Color = det_colour;
 plot_rdot = 0;
 if plot_rdot
-  det_colour = get(h1, 'Color');
   quiver(all_dets.xy(1,:), all_dets.xy(2,:), all_dets.vxy(1,:), all_dets.vxy(2,:), ...
       'Color', det_colour);
 end
 
+% Plot the tracks in the global frame
+for i = 1:length(tracks)
+  tr = tracks(i);
+  plot(tr.x, tr.y, '.', 'Color', truth_colour);
+  % quiver(tr.x, tr.y, tr.vx, tr.vy, 'Color', truth_colour);
+end
+
 % Plot belief functions over time in the global frame
 all_beliefs = transform_beliefs(beliefs);
-h2 = plot(all_beliefs.x, all_beliefs.y, 'x-');
-plot_xydot = 0;
+plot(all_beliefs.x, all_beliefs.y, '-', 'LineWidth', 2, 'Color', belief_colour);
+plot_xydot = 1;
 if plot_xydot
-  belief_colour = get(h2, 'Color');
   quiver(all_beliefs.x, all_beliefs.y, all_beliefs.xdot, all_beliefs.ydot, 'Color', belief_colour);
 end
 
-legend('track true path', 'detections', 'estimated track', 'Location', 'northwest');
+legend('detections', 'track true path', 'estimated track', 'Location', 'northwest');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

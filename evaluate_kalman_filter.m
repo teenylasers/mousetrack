@@ -34,12 +34,14 @@ for i = 1:time_length
 end
 if plot_res
   figure;
+  title('Track estimation error');
   subplot(2,1,1);
   plot(1:time_length, p_err, 1:time_length, naive_p_err);
   legend('filtered', 'unfiltered');
   xlabel('Time step'); ylabel('Position error abs val (m)');
   subplot(2,1,2);
-  plot(v_err);	
+  plot(v_err);
+  ylim([0 20]);
   xlabel('Time step'); ylabel('Velocity error abs val (m/s)');
 end
 
@@ -65,10 +67,12 @@ if plot_res
   subplot(3,1,1);
   plot(1:time_length, x_innov, ...
       1:time_length, x_innov_bound, 1:time_length, -1 * x_innov_bound);
+  ylim([-50 50]);
   xlabel('Time step'); ylabel('x (m)');
   subplot(3,1,2);
   plot(1:time_length, y_innov, ...
       1:time_length, y_innov_bound, 1:time_length, -1 * y_innov_bound);
+  ylim([-50 50]);
   xlabel('Time step'); ylabel('y (m)');
   subplot(3,1,3);
   plot(1:time_length, rrdot_innov, ...

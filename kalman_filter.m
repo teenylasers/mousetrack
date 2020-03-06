@@ -30,10 +30,7 @@ sig_hat = A * prev_belief.sig * A' + Q;
 % Kalman gain
 C = get_matrix_C(prev_belief.mu);
 R = get_covariance_R(det);
-% TODO: is inv() a good idea? numerical stability?
-% TODO: what happens when uncertainty gets too small for K = A*inv(B) to make sense?
-fprintf('Reciprocal condition number = %d\n', rcond(C * sig_hat * C' + R));
-% TODO: why does innov_cov = C * sig_hat * C' + R?
+% fprintf('Reciprocal condition number = %d\n', rcond(C * sig_hat * C' + R));
 new_belief.innov_cov = C * sig_hat * C' + R;
 K = sig_hat * C' * inv(new_belief.innov_cov);
 
@@ -81,9 +78,9 @@ function Q = get_covariance_Q(dt)
 %      0 0 dt^4/8  dt^3/3];
 
 Q = [10 0 0 0;
-      0 0.5 0 0;
+      0 1 0 0;
       0 0 10 0;
-      0 0 0 0.5];
+      0 0 0 1];
 
 % Using constant velocity model,
 % http://www.robots.ox.ac.uk/~ian/Teaching/Estimation/LectureNotes2.pdf

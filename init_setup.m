@@ -28,4 +28,4 @@ radar_coords.R = ...
 
 % Detection update frequency = 10 Hz
 global dt
-dt = 0.2;
+dt = 0.1;
