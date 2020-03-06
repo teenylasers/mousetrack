@@ -4,15 +4,46 @@
 % Returns a belief function belief that represents a new track.
 %
 % Input:
-% m = measurement vector {x, y, r*r_dot}
-% det = detection struct {r, theta, r_dot}
+% dets = an array of detections {r, theta, r_dot}, the last element is the latest
+% detection
 
-function belief = initiate_track(m, det)
-% Naive track initiation for now
-xdot = 0; % TODO: not correct
-ydot = 0; % TODO: not correct
+function belief = initiate_track(dets)
+
+m = convert_detection_to_measurement(dets(end));
+xdot = 0;
+ydot = 0;
 belief.mu = [m(1); xdot; m(2); ydot];
 belief.sig = [10  0  0  0;
               0  0.1  0  0;
 	      0  0  10  0;
 	      0  0  0  0.1]; % TODO: not correct
+belief.innov = [0; 0; 0];
+belief.innov_cov = zeros(3);
+
+% Decide whether there has been enough detections to initiate a track.
+% if length(dets) < 2
+%   can_init_track = 0;
+% else
+%   can_init_track = 1;
+% end
+%
+% % If cannot initiate a track, then return an all-zero belief
+% if ~can_init_track
+%   belief.mu = zeros(4,1);
+%   belief.sig = zeros(4);
+%   belief.innov = zeros(3,1);
+%   belief.innov_cov = zeros(3);
+% else
+%   prev_meas = convert_detection_to_measurement(dets(length(dets)-1));
+%   curr_meas = convert_detection_to_measurement(dets(end));
+%   global dt
+%   xdot = (curr_meas(1)-prev_meas(1))/dt;
+%   ydot = (curr_meas(2)-prev_meas(2))/dt;
+%   belief.mu = [curr_meas(1); xdot; curr_meas(2); ydot];
+%   belief.sig = [10  0  0  0;
+%                  0  0.1  0  0;
+% 		 0  0  10  0;
+% 		 0  0  0  0.1]; % TODO: not correct
+%   belief.innov = [0; 0; 0];
+%   belief.innov_cov = zeros(3);
+% end

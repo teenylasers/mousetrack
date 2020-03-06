@@ -5,11 +5,11 @@
 % m = current measurement {x, y, r*r_dot}
 % det = current detection {r, theta, r_dot}, used for covariance R calculation
 % dt = time since the last state estimate
-% prev_belief = the previous belief function, characterized by the attributes {mu, sig}
+% prev_belief = the previous belief function {mu, sig, innov, innov_cov}
 % future_times = a list of times from now to predict the state
 %
 % Output:
-% new_belief = the latest belief function, characterized by {mu, sig}
+% new_belief = the latest belief function {mu, sig, innov, innov_cov}
 % predictions = a list future belief functions at future_times
 
 function [new_belief, predictions] = kalman_filter(m, det, dt, prev_belief, future_times)
@@ -32,13 +32,19 @@ C = get_matrix_C(prev_belief.mu);
 R = get_covariance_R(det);
 % TODO: is inv() a good idea? numerical stability?
 % TODO: what happens when uncertainty gets too small for K = A*inv(B) to make sense?
-fprintf('Reciprocal condition number = %d', rcond(C * sig_hat * C' + R));
-K = sig_hat * C' * inv(C * sig_hat * C' + R);
+fprintf('Reciprocal condition number = %d\n', rcond(C * sig_hat * C' + R));
+% TODO: why does innov_cov = C * sig_hat * C' + R?
+new_belief.innov_cov = C * sig_hat * C' + R;
+K = sig_hat * C' * inv(new_belief.innov_cov);
 
 % Filtered estimate of the current state
-m_residual = m - C*mu_hat
-new_belief.mu = mu_hat + K * m_residual;
-new_belief.sig = (eye(num_state_dims) - K * C) * sig_hat;
+new_belief.innov = m - C*mu_hat;
+new_belief.mu = mu_hat + K * new_belief.innov;
+% new_belief.sig = (eye(num_state_dims) - K * C) * sig_hat;
+% covariance in Joseph form
+new_belief.sig = ...
+    (eye(num_state_dims) - K * C) * sig_hat * transpose(eye(num_state_dims) - K * C) ...
+    + K * R * K';
 
 % Predict future states
 predictions.mu = zeros(prediction_length);
