@@ -35,7 +35,11 @@ if plot_xydot
 end
 
 legend('detections', 'track true path', 'estimated track', 'Location', 'northwest');
-
+global x_axis
+global y_axis
+xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
+ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
+hold off;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function transform_beliefs

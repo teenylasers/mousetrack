@@ -53,5 +53,3 @@ evaluate_kalman_filter(tracks(1), dets, beliefs, 1);
 
 % Visualize the track(s) and measurements
 visualize_tracker_results(radar_coords, tracks, dets, beliefs);
-xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
-ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
