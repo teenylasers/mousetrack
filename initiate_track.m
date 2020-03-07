@@ -10,12 +10,12 @@
 function belief = initiate_track(dets)
 
 m = convert_detection_to_measurement(dets(end));
-xdot = 0;
-ydot = 0;
+xdot = -dets(end).r_dot * sin(dets(end).theta);
+ydot = dets(end).r_dot * cos(dets(end).theta);
 belief.mu = [m(1); xdot; m(2); ydot];
 belief.sig = eye(4) * 1e9;
 belief.innov = [0; 0; 0];
-belief.innov_cov = zeros(3);
+belief.innov_cov = eye(length(belief.innov));
 
 % Decide whether there has been enough detections to initiate a track.
 % if length(dets) < 2

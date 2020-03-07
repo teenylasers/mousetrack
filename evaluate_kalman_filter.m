@@ -11,7 +11,7 @@
 %
 
 function [position_err_sq, velocity_err_sq] = evaluate_kalman_filter(...
-    true_track, detections, beliefs, plot_res)
+    true_track, meas, beliefs, plot_res)
 
 time_length = length(true_track.x);
 assert(length(beliefs) == time_length);
@@ -21,9 +21,8 @@ naive_p_err = zeros(1, time_length);
 p_err = zeros(1, time_length);
 v_err = zeros(1, time_length);
 for i = 1:time_length
-  m = convert_detection_to_measurement(detections(i));
-  naive_dx = true_track.x(i) - m(1);
-  naive_dy = true_track.y(i) - m(2);
+  naive_dx = true_track.x(i) - meas(1,i);
+  naive_dy = true_track.y(i) - meas(2,i);
   dx = true_track.x(i) - beliefs(i).mu(1);
   dy = true_track.y(i) - beliefs(i).mu(3);
   dvx = true_track.vx(i) - beliefs(i).mu(2);

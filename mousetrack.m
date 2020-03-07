@@ -26,20 +26,45 @@ global radar_coords
 global dt
 init_setup();
 
+% Flags
+FLAG_debug_kalman_filter = 0;
+
 % Generate a single ground-truth track
 N = 600/15/dt + round(randn(1) * 22);
-tracks(1) = track_generator(x_axis, y_axis, N, dt);
+if FLAG_debug_kalman_filter
+  tracks(1) = track_generator_kalman_filter_debug(x_axis, y_axis, N, dt);
+else
+  tracks(1) = track_generator(x_axis, y_axis, N, dt);
+end
 
 % Generate radar detections from a track for time indices ti
 dets = [];
+meas = [];
 beliefs = [];
-for ti = 1:N
-  new_dets = detections_generator(tracks, ti, radar_coords);
-  dets = [dets new_dets];
-  new_meas = convert_detection_to_measurement(new_dets);
+for ti = 1:N % ti = time index
+  % Get the next measurement
+  if FLAG_debug_kalman_filter
+    new_dets.r = nan;
+    new_dets.theta = nan;
+    new_dets.r_dot = nan;
+    new_meas = measurement_generator_kalman_filter_debug(tracks(1), ti);
+  else
+    new_dets = detections_generator(tracks, ti, radar_coords);
+    dets = [dets new_dets];
+    new_meas = convert_detection_to_measurement(new_dets);
+  end
+  meas = [meas new_meas];
+
   if length(beliefs)==0 || sum(sum(beliefs(end).sig))==0
-    fprintf('No track initiated yet at time step %d\n', ti);
-    new_belief = initiate_track(dets);
+    %fprintf('No track initiated yet at time step %d\n', ti);
+    if FLAG_debug_kalman_filter
+      new_belief.mu = [new_meas(1); 0; new_meas(2); 0];
+      new_belief.sig = 1e9 * eye(length(new_belief.mu));
+      new_belief.innov = zeros(length(new_meas),1);
+      new_belief.innov_cov = eye(length(new_belief.innov));
+    else
+      new_belief = initiate_track(dets);
+    end
   else
     [new_belief, predictions] = kalman_filter(new_meas, new_dets, dt, beliefs(end), []);
   end
@@ -49,7 +74,7 @@ for ti = 1:N
   % ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
   % disp('Press any key to continue.\n'); pause;
 end
-evaluate_kalman_filter(tracks(1), dets, beliefs, 1);
+evaluate_kalman_filter(tracks(1), meas, beliefs, 1);
 
 % Visualize the track(s) and measurements
 visualize_tracker_results(radar_coords, tracks, dets, beliefs);

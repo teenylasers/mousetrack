@@ -10,13 +10,15 @@ truth_colour = [0 0.4470 0.7410];
 belief_colour = [0.8500 0.3250 0.0980];
 
 % Plot detections over time in the global frame
-all_dets = transform_detections(dets, radar_coords);
-h = polar(all_dets.theta + radar_coords.bearing, all_dets.r, 'o');
-h.Color = det_colour;
-plot_rdot = 0;
-if plot_rdot
-  quiver(all_dets.xy(1,:), all_dets.xy(2,:), all_dets.vxy(1,:), all_dets.vxy(2,:), ...
-      'Color', det_colour);
+if ~isempty(dets)
+  all_dets = transform_detections(dets, radar_coords);
+  h = polar(all_dets.theta + radar_coords.bearing, all_dets.r, 'o');
+  h.Color = det_colour;
+  plot_rdot = 0;
+  if plot_rdot
+    quiver(all_dets.xy(1,:), all_dets.xy(2,:), all_dets.vxy(1,:), all_dets.vxy(2,:), ...
+	'Color', det_colour);
+  end
 end
 
 % Plot the tracks in the global frame
@@ -63,11 +65,6 @@ end
 
 function all_dets = transform_detections(dets, radar_coords)
 
-% all_dets.r = zeros(1, length(dets));
-% all_dets.r_dot = zeros(1, length(dets));
-% all_dets.theta = zeros(1, length(dets));
-% all_dets.xy = zeros(2, length(dets));
-% all_dets.vxy = zeros(2, length(dets));
 for i = 1:length(dets)
   all_dets.r(i) = dets(i).r;
   all_dets.r_dot(i) = dets(i).r_dot;
