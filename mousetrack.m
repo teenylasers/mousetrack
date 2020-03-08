@@ -27,15 +27,15 @@ global dt
 init_setup();
 
 % Flags
-FLAG_debug_kf = 0;
+% Only one of the following should be >0.
+FLAGS.run_kf = 0;         % run tracker using linear kalman filter
+FLAGS.debug_kf = 0;       % debug tracker with linear kalman filter
+FLAGS.run_ekf = 0;        % run tracker using extended kalman filter
+FLAGS.debug_ekf = 1;      % debug tracker with extended kalman filter
 
 % Generate a single ground-truth track
 N = 600/15/dt + round(randn(1) * 22);
-if FLAG_debug_kf
-  tracks(1) = track_generator_kf_debug(x_axis, y_axis, N, dt);
-else
-  tracks(1) = track_generator(x_axis, y_axis, N, dt);
-end
+tracks(1) = generate_track(FLAGS, N);
 
 % Generate radar detections from a track for time indices ti
 dets = [];
@@ -43,32 +43,24 @@ meas = [];
 beliefs = [];
 for ti = 1:N % ti = time index
   % Get the next measurement
-  if FLAG_debug_kf
-    new_dets.r = nan;
-    new_dets.theta = nan;
-    new_dets.r_dot = nan;
-    new_meas = measurement_generator_kf_debug(tracks(1), ti);
-  else
-    new_dets = detections_generator(tracks, ti, radar_coords);
-    dets = [dets new_dets];
-    new_meas = convert_detection_to_measurement(new_dets);
-  end
+  [new_dets, new_meas] = get_next_measurement(FLAGS, tracks(1), ti);
+  dets = [dets new_dets];
   meas = [meas new_meas];
 
   if length(beliefs)==0 || sum(sum(beliefs(end).sig))==0
     %fprintf('No track initiated yet at time step %d\n', ti);
-    if FLAG_debug_kf
-      new_belief.mu = [new_meas(1); 0; new_meas(2); 0];
-      new_belief.sig = 1e9 * eye(length(new_belief.mu));
-      new_belief.innov = zeros(length(new_meas),1);
-      new_belief.innov_cov = eye(length(new_belief.innov));
+    if FLAGS.run_kf || FLAGS.run_ekf
+      new_belief = initiate_track(FLAGS, dets);
     else
-      new_belief = initiate_track(dets);
+      new_belief = initiate_track(FLAGS, meas);
     end
   else
-    [new_belief, predictions] = kf(new_meas, new_dets, dt, beliefs(end), []);
+    [new_belief, predictions] = run_filter(FLAGS, ...
+                                           new_meas, new_dets, dt, beliefs(end), []);
   end
   beliefs = [beliefs new_belief];
+
+  % Step-by-step visualization
   % visualize_tracker_results(radar_coords, tracks, dets, beliefs);
   % xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
   % ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
@@ -78,3 +70,47 @@ evaluate_kalman_filter(tracks(1), meas, beliefs, 1);
 
 % Visualize the track(s) and measurements
 visualize_tracker_results(radar_coords, tracks, dets, beliefs);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper functions
+
+function track = generate_track(FLAGS, N)
+global x_axis
+global y_axis
+global dt
+if FLAGS.debug_kf
+  track = track_generator_kf_debug(x_axis, y_axis, N, dt);
+elseif FLAGS.debug_ekf
+  track = track_generator_ekf_debug(x_axis, y_axis, N, dt);
+else
+  track = track_generator(x_axis, y_axis, N, dt);
+end
+end
+
+function [new_dets, new_meas] = get_next_measurement(FLAGS, track, ti)
+global radar_coords
+if FLAGS.debug_kf
+  new_dets.r = nan;
+  new_dets.theta = nan;
+  new_dets.r_dot = nan;
+  new_meas = measurement_generator_kf_debug(track, ti);
+elseif FLAGS.debug_ekf
+  new_dets.r = nan;
+  new_dets.theta = nan;
+  new_dets.r_dot = nan;
+  new_meas = measurement_generator_ekf_debug(track, ti);
+else
+  new_dets = detections_generator(track, ti, radar_coords);
+  new_meas = kf_convert_detection_to_measurement(new_dets);
+end
+end
+
+function [new_belief, predictions] = run_filter(FLAGS, ...
+                                                new_meas, new_dets, dt, prev_belief, ...
+                                                future_times)
+if FLAGS.debug_kf || FLAGS.run_kf
+  [new_belief, predictions] = kf(new_meas, new_dets, dt, prev_belief, future_times);
+elseif FLAGS.debug_ekf || FLAGS.run_ekf
+  [new_belief, predictions] = ekf(new_meas, new_dets, dt, prev_belief, future_times);
+end
+end

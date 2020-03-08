@@ -1,21 +1,64 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function initiate_tracks
+% function initiate_track
 %
 % Returns a belief function belief that represents a new track.
 %
 % Input:
 % dets = an array of detections {r, theta, r_dot}, the last element is the latest
-% detection
+% detection. If FLAGS.debug_*, then dets is actually an array of measurements, detection
+% to measurement step is bypassed in debug mode.
 
-function belief = initiate_track(dets)
+function belief = initiate_track(FLAGS, dets)
 
-m = convert_detection_to_measurement(dets(end));
-xdot = -dets(end).r_dot * sin(dets(end).theta);
-ydot = dets(end).r_dot * cos(dets(end).theta);
-belief.mu = [m(1); xdot; m(2); ydot];
-belief.sig = eye(4) * 1e9;
-belief.innov = [0; 0; 0];
-belief.innov_cov = eye(length(belief.innov));
+if FLAGS.run_kf || FLAGS.run_ekf
+  r = dets(end).r;
+  theta = dets(end).theta;
+  r_dot = dets(end).r_dot;
+  if isnan(r) || isnan(theta) || isnan(r_dot)
+    fprintf('Erroneous input: r = %f, theta = %f, r_dot = %f\n', ...
+            r, theta, r_dot);
+    return;
+  end
+elseif FLAGS.debug_kf || FLAGS.debug_ekf
+  if sum(isnan(dets(end)))
+    fprintf('Erroneous input: dets(end) = %f', dets(end));
+    return
+  end
+end
+
+if FLAGS.debug_ekf
+  r = dets(1, end)
+  theta = dets(2, end)
+  r_dot = dets(3, end)
+end
+
+if FLAGS.run_kf
+  m = kf_convert_detection_to_measurement(dets(end));
+  xdot = -r_dot * sin(theta);
+  ydot = r_dot * cos(theta);
+  belief.mu = [m(1); xdot; m(2); ydot];
+  belief.sig = 1e9 * eye(length(belief.mu));
+  belief.innov = zeros(length(m), 1);
+  belief.innov_cov = eye(length(belief.innov));
+elseif FLAGS.run_ekf || FLAGS.debug_ekf
+  x = -r * sin(theta);
+  y = r * cos(theta);
+  xdot = -r_dot * sin(theta);
+  ydot = r_dot * cos(theta);
+  belief.mu = [x; xdot; y; ydot];
+  belief.sig = 1e9 * eye(length(belief.mu));
+  belief.innov = zeros(length(dets(end)), 1);
+  belief.innov_cov = eye(length(belief.innov));
+elseif FLAGS.debug_kf
+  x = dets(1, end);
+  xdot = 0;
+  y = dets(2, end);
+  ydot = 0;
+  belief.mu = [x; xdot; y; ydot];
+  belief.sig = 1e9 * eye(length(belief.mu));
+  belief.innov = zeros(length(dets(end)),1);
+  belief.innov_cov = eye(length(belief.innov));
+end
 
 % Decide whether there has been enough detections to initiate a track.
 % if length(dets) < 2
@@ -44,3 +87,5 @@ belief.innov_cov = eye(length(belief.innov));
 %   belief.innov = [0; 0; 0];
 %   belief.innov_cov = zeros(3);
 % end
+
+end

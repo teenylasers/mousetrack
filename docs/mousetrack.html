@@ -151,22 +151,23 @@ tt {
 \[\begin{align}\hat{\mu}(k|k-1) = A\mu(k-1)\end{align}\]
 \[\begin{align}\hat{\Sigma}(k|k-1) = A\Sigma(k-1)A^T + Q\end{align}\]
 <p>The Kalman gain is </p>
-\[\begin{align}K(k) = \hat{\Sigma}(k|k-1)C^T[C\hat{\Sigma}(k|k-1)C^T + R]^{-1}\end{align}\]
+\[\begin{align}\label{eq:kf_gain} K(k) = \hat{\Sigma}(k|k-1)C^T[C\hat{\Sigma}(k|k-1)C^T + R]^{-1}\end{align}\]
 <p>The filtered state is </p>
 \[\begin{align}\mu(k|k) = \hat{\mu}(k|k-1) + K(k)\tilde{m}(k)\end{align}\]
-\[\begin{align}\Sigma(k|k) = [\mathcal{I} - K(k)C] \hat{\Sigma}(k|k-1)\end{align}\]
-<p>where \(\tilde{m} = m(k) - C\hat{\mu}(k|k-1)\) is the measurement residual.</p>
+\[\begin{align}\label{eq:kf_cov} \Sigma(k|k) = [\mathcal{I} - K(k)C] \hat{\Sigma}(k|k-1)\end{align}\]
+<p>where \(\tilde{m} = m(k) - C\hat{\mu}(k|k-1)\) is the unfiltered measurement residual, i.e. the innovation, and its covariance is \(S(k) = C\hat{\Sigma}(k|k-1)C^T + R\).</p>
 <p>Finally, future state predictions are given by </p>
 \[\begin{align}\mu(k+1|k) = A\mu(k|k)\end{align}\]
 \[\begin{align}\Sigma(k+1|k) = A\Sigma(k|k)A^T + Q\end{align}\]
-<h3 class='section_entry' id='1.2.'>1.2. State and measurement models in radar tracking</h3>
+<h3 class='section_entry' id='1.2.'>1.2. Evaluate filter performance</h3>
+<h3 class='section_entry' id='model1'>1.3.  Model 1. Constant velocity, Taylor expansion for measurement noise covariance</h3>
 <p>Radar measurements are in polar coordinates. We choose to track in cartesian coordinates for a more intuitive model of target motion. For a radar scan interval of time \(T\), target motions are simply </p>
 \[\begin{align}
 x(k+1) = x(k) + T\dot{x}(k) + \frac{T^2}{2}\ddot{x}(k) \nonumber \\
-y(k+1) = y(k) + T\dot{y}(k) + \frac{T^2}{2}\ddot{y}(k)
+y(k+1) = y(k) + T\dot{y}(k) + \frac{T^2}{2}\ddot{y}(k) \label{eq:kinetics}
 \end{align}\]
 <p>The state update model is </p>
-\[\begin{align}
+\[\begin{align} \label{eq:const_v_process}
 s = \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix},\quad
 A = \begin{bmatrix} 1 &amp; T &amp; 0 &amp; 0 \\
                     0 &amp; 1 &amp; 0 &amp; 0 \\
@@ -183,13 +184,13 @@ m(k) &amp;= Cs(k) \nonumber \\
 \end{bmatrix}
 \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix}
 \end{align}\]
-<p>TODO: the form of \(m = Cs\) comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments?</p>
+<p>TODO: the form of \(m = Cs\) comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments, e.g. EKF or UKF?</p>
 <p>Notes: </p>
 <ul>
 <li><p>Acceleration is not included in the state model for now. </p>
 
 </ul>
-<h3 class='section_entry' id='1.3.'>1.3. Process covariance</h3>
+<h4 class='section_entry' id='1.3.1.'>1.3.1. Process covariance</h4>
 <p>Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time \(T \ll \tau_m\) the maneuver time constant. The resulting covariance is stated here without derivation, adapted from [Blackman book, Page 33].</p>
 <p>TODO: derive, model other noise</p>
 \[\begin{align}
@@ -201,7 +202,7 @@ Q = \frac{2\sigma^2_m}{\tau_m}
 0 &amp; 0 &amp; \frac{T^4}{8} &amp; \frac{T^3}{3}
 \end{bmatrix}
 \end{align}\]
-<h3 class='section_entry' id='1.4.'>1.4. Coordinate transform for measurement covariance</h3>
+<h4 class='section_entry' id='1.3.2.'>1.3.2. Coordinate transform for measurement covariance</h4>
 <p>Radar measurements typically consists of \(\{r, \dot{r}, \theta\}\) with variances \(\{\sigma^2_r, \sigma^2_{\dot{r}}, \sigma^2_\theta\}\). We wish to calculate the covariance of the measurement noise \(\mathcal{N}(0, R)\), where </p>
 \[\begin{align}R =
 \begin{bmatrix}
@@ -239,6 +240,44 @@ R &amp;= \mathbf{J}
 \sigma^2_r\sin^2\theta + r^2\sigma^2_\theta\cos^2\theta &amp; \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; -\dot{r}\sigma^2_r\sin\theta \\
 \cos\theta\sin\theta(\sigma^2_r - r^2\sigma^2_\theta) &amp; r^2\sigma^2_\theta\sin^2\theta + \sigma^2_r\cos^2\theta &amp; \dot{r}\sigma^2_r\cos\theta \\
 -\dot{r}\sigma^2_r\sin\theta &amp; \dot{r}\sigma^2_r\cos\theta &amp; \dot{r}^2\sigma^2_r + r^2\sigma^2_\dot{r}
+\end{bmatrix}
+\end{align}\]
+<h4 class='section_entry' id='1.3.3.'>1.3.3. Implementation results</h4>
+<ol>
+<li><p>Singer model process covariance hasn't worked. The filter converges better with a time-invariant diagonal process covariance. </p>
+<li><p>If we use a constant linear measurement covariance that doesn't depend on \(\{r, \theta, \dot{r}\}\), velocity estimation converges then diverges. This is the case even with a linear (i.e. straight line) track. </p>
+<li><p>Velocity estimation is consistently poor for \(\dot{x}\), much better for \(\dot{y}\). Implement extended Kalman filter to see whether the measurement model is the root cause. </p>
+
+</ol>
+<h3 class='section_entry' id='1.4.'>1.4. Model 2. Constant velocity, extended Kalman filter for measurement model</h3>
+<p>The process model is unchanged from <a href='#model1'>Model 1</a> above, described by \eqref{eq:kinetics} and \eqref{eq:const_v_process}. The measurement vector is the radar's direct measurement, </p>
+\[\begin{align}m(k) &amp;= c(s(k)) \nonumber \\
+\begin{bmatrix}r \\ \theta \\ \dot{r}\end{bmatrix} &amp;=
+\begin{bmatrix}
+\sqrt{x^2 + y^2} \\
+\arctan{(-x/y)} \\
+-\dot{x}\sin{\theta} + \dot{y}\cos{\theta}
+\end{bmatrix}\end{align}\]
+<p>The measurement noise covariance is </p>
+\[\begin{align}
+R = \begin{bmatrix}
+\sigma^2_r &amp; 0 &amp; 0 \\
+0 &amp; \sigma^2_\theta &amp; 0
+\\ 0 &amp; 0 &amp; \sigma^2_\dot{r}
+\end{bmatrix}\end{align}\]
+<p>Because we no longer have a matrix \(C\) to transform the state vector \(s\) to the measurement \(m\), calculations of the Kalman gain \eqref{eq:kf_gain} and the belief function covariance \eqref{eq:kf_cov} is now given by </p>
+\[\begin{align}K(k) = \hat{\Sigma}(k|k-1)\mathbf{J}_c^T[\mathbf{J}_c\hat{\Sigma}(k|k-1)\mathbf{J}_c^T + R]^{-1}\end{align}\]
+\[\begin{align}\Sigma(k|k) = [\mathcal{I} - K(k)\mathbf{J}_c] \hat{\Sigma}(k|k-1)\end{align}\]
+<p>where </p>
+\[\begin{align}
+\mathbf{J}_c &amp;= \frac{\partial c(s)}{\partial s} \nonumber \\
+ &amp;= \begin{bmatrix}
+ \frac{x}{\sqrt{x^2+y^2}} &amp; 0 &amp; \frac{y}{\sqrt{x^2+y^2}} &amp; 0 \\
+ -\frac{1}{(1+\frac{x^2}{y^2})y} &amp; 0 &amp; \frac{x}{(1+\frac{x^2}{y^2})y^2} &amp; 0 \\
+ -\frac{x^2\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^3} + \frac{\dot{x}}{\sqrt{1+\frac{x^2}{y^2}}y} - \frac{x\dot{y}}{(1+\frac{x^3}{y^2})^{3/2}y^2} &amp;
+ \frac{x}{\sqrt{1+\frac{x^2}{y^2}}y} &amp;
+ \frac{x^3\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^4}-\frac{x^2\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^3}+\frac{x^2\dot{y}}{(1+\frac{x^3}{y^2})^{3/2}y^3} &amp;
+ \frac{1}{\sqrt{1+\frac{x^2}{y^2}}}
 \end{bmatrix}
 \end{align}\]
 
