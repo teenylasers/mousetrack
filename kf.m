@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function kalman_filter
+% function kf
 %
 % Input:
 % m = current measurement {x, y, r*r_dot}
@@ -12,7 +12,7 @@
 % new_belief = the latest belief function {mu, sig, innov, innov_cov}
 % predictions = a list future belief functions at future_times
 
-function [new_belief, predictions] = kalman_filter(m, det, dt, prev_belief, future_times)
+function [new_belief, predictions] = kf(m, det, dt, prev_belief, future_times)
 
 % Check input
 assert(length(prev_belief.mu) == prod(size(prev_belief.mu)), ...
@@ -23,14 +23,14 @@ assert(length(future_times) == prod(size(future_times)));
 prediction_length = length(future_times);
 
 % Unfiltered estimate of the current state
-A = kalman_filter_get_matrix_A(dt);
-Q = kalman_filter_get_covariance_Q(dt);
+A = kf_get_mat_A(dt);
+Q = kf_get_cov_Q(dt);
 mu_hat = A * prev_belief.mu;
 sig_hat = A * prev_belief.sig * A' + Q;
 
 % Kalman gain
-C = kalman_filter_get_matrix_C(prev_belief.mu);
-R = kalman_filter_get_covariance_R();
+C = kf_get_mat_C(prev_belief.mu);
+R = kf_get_cov_R(det);
 % fprintf('Reciprocal condition number = %d\n', rcond(C * sig_hat * C' + R));
 new_belief.innov_cov = C * sig_hat * C' + R;
 K = sig_hat * C' * inv(new_belief.innov_cov);
@@ -49,8 +49,8 @@ predictions.mu = zeros(prediction_length);
 predictions.sig = zeros(prediction_length);
 for i = 1:prediction_length
   t = futre_times(i);
-  A = kalman_filter_get_matrix_A(t);
-  Q = kalman_filter_get_covariance_Q(t);
+  A = kf_get_mat_A(t);
+  Q = kf_get_cov_Q(t);
   predictions.mu(i) = A * new_belief.mu;
   predictions.sig(i) = A * new_belief.sig * A' + Q;
 end
@@ -61,13 +61,13 @@ end
 %  %     s1 = A * s + N(0,Q)
 %  % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
 %
-%  function A = get_matrix_A(dt)
+%  function A = get_mat_A(dt)
 %  A = [1 dt  0  0;
 %       0  1  0  0;
 %       0  0  1 dt;
 %       0  0  0  1];
 %
-%  function Q = get_covariance_Q(dt)
+%  function Q = get_cov_Q(dt)
 %  % Using Singer model for sampling time << acceleration/maneuvering time
 %  % From Blackman Page 33 without derivation
 %  % sig_m = 1; % TODO: set realistic magnitudes
@@ -97,12 +97,12 @@ end
 %  %     m = C * s + N(0,R)
 %  % where N(0,R) is the gaussian measurement noise with zero-mean and covariance R.
 %
-%  function C = get_matrix_C(s)
+%  function C = get_mat_C(s)
 %  C = [   1    0    0    0;
 %          0    0    1    0;
 %        s(2) s(1) s(4) s(3)];
 %
-%  function R = get_covariance_R(det)
+%  function R = get_cov_R(det)
 %  r = det.r;
 %  theta = det.theta;
 %  r_dot = det.r_dot;

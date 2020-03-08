@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function track_generator_kalman_filter_debug
+% function track_generator_kf_debug
 %
 % Generates a track, returns a vector (length N) that represents points along the track.
 %
@@ -16,14 +16,14 @@
 % track:
 % Each point along the track is described by {x, y, vx, vy}
 
-function track = track_generator_kalman_filter_debug(x_axis, y_axis, N, dt)
+function track = track_generator_kf_debug(x_axis, y_axis, N, dt)
 
 x = zeros(1,N);
 y = zeros(1,N);
 vx = zeros(1,N);
 vy = zeros(1,N);
-A = kalman_filter_get_matrix_A(dt);
-Q = kalman_filter_get_covariance_Q(dt);
+A = kf_get_mat_A(dt);
+Q = kf_get_cov_Q(dt);
 
 % Track always starts from the left-end, thus x(1) = x_axis.min; however, it can be
 % anywhere between y_axis.min and max.

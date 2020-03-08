@@ -1,14 +1,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function kalman_filter_get_covariance_R
+% function kf_get_cov_R
 %
 % Measurement model
 %     m = [x; y; x*x_dot+y*y_dot ~ r*r_dot]
 %     m = C * s + N(0,R)
 % where N(0,R) is the gaussian measurement noise with zero-mean and covariance R.
 
-function R = kalman_filter_get_covariance_R(det)
+function R = kf_get_cov_R(det)
 
-if nargin<1 || det.r==nan || det.theta==nan || det.r_dot==nan
+if nargin<1 || isnan(det.r) || isnan(det.theta) || isnan(det.r_dot)
   R = [10 0 0;
        0 10 0;
        0 0 20];

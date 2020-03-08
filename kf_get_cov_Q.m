@@ -1,12 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function kalman_filter_get_covariance_Q
+% function kf_get_cov_Q
 %
 % State model
 %     s = [x; x_dot; y; y_dot]
 %     s1 = A * s + N(0,Q)
 % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
 
-function Q = kalman_filter_get_covariance_Q(dt)
+function Q = kf_get_cov_Q(dt)
 % Using Singer model for sampling time << acceleration/maneuvering time
 % From Blackman Page 33 without derivation
 % sig_m = 1; % TODO: set realistic magnitudes

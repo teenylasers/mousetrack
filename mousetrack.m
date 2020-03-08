@@ -27,12 +27,12 @@ global dt
 init_setup();
 
 % Flags
-FLAG_debug_kalman_filter = 0;
+FLAG_debug_kf = 0;
 
 % Generate a single ground-truth track
 N = 600/15/dt + round(randn(1) * 22);
-if FLAG_debug_kalman_filter
-  tracks(1) = track_generator_kalman_filter_debug(x_axis, y_axis, N, dt);
+if FLAG_debug_kf
+  tracks(1) = track_generator_kf_debug(x_axis, y_axis, N, dt);
 else
   tracks(1) = track_generator(x_axis, y_axis, N, dt);
 end
@@ -43,11 +43,11 @@ meas = [];
 beliefs = [];
 for ti = 1:N % ti = time index
   % Get the next measurement
-  if FLAG_debug_kalman_filter
+  if FLAG_debug_kf
     new_dets.r = nan;
     new_dets.theta = nan;
     new_dets.r_dot = nan;
-    new_meas = measurement_generator_kalman_filter_debug(tracks(1), ti);
+    new_meas = measurement_generator_kf_debug(tracks(1), ti);
   else
     new_dets = detections_generator(tracks, ti, radar_coords);
     dets = [dets new_dets];
@@ -57,7 +57,7 @@ for ti = 1:N % ti = time index
 
   if length(beliefs)==0 || sum(sum(beliefs(end).sig))==0
     %fprintf('No track initiated yet at time step %d\n', ti);
-    if FLAG_debug_kalman_filter
+    if FLAG_debug_kf
       new_belief.mu = [new_meas(1); 0; new_meas(2); 0];
       new_belief.sig = 1e9 * eye(length(new_belief.mu));
       new_belief.innov = zeros(length(new_meas),1);
@@ -66,7 +66,7 @@ for ti = 1:N % ti = time index
       new_belief = initiate_track(dets);
     end
   else
-    [new_belief, predictions] = kalman_filter(new_meas, new_dets, dt, beliefs(end), []);
+    [new_belief, predictions] = kf(new_meas, new_dets, dt, beliefs(end), []);
   end
   beliefs = [beliefs new_belief];
   % visualize_tracker_results(radar_coords, tracks, dets, beliefs);
