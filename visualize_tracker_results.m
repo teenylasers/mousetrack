@@ -1,6 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Visualization: overlay detections in the radar frame on track in the global frame
-function visualize_tracker_results(FLAGS, radar_coords, tracks, dets, meas, beliefs)
+function visualize_tracker_results(radar_coords, tracks, dets, meas, beliefs)
+
+global FLAGS
 
 figure; hold on;
 
@@ -61,14 +63,22 @@ end % end function visualize_tracker_results
 %
 
 function all_beliefs = transform_beliefs(beliefs)
-
-for i = 1:length(beliefs)
-  all_beliefs.x(i) = beliefs(i).mu(1);
-  all_beliefs.xdot(i) = beliefs(i).mu(2);
-  all_beliefs.y(i) = beliefs(i).mu(3);
-  all_beliefs.ydot(i) = beliefs(i).mu(4);
+global FLAGS
+if FLAGS.model_accel
+  for i = 1:length(beliefs)
+    all_beliefs.x(i) = beliefs(i).mu(1);
+    all_beliefs.xdot(i) = beliefs(i).mu(2);
+    all_beliefs.y(i) = beliefs(i).mu(4);
+    all_beliefs.ydot(i) = beliefs(i).mu(5);
+  end
+else
+  for i = 1:length(beliefs)
+    all_beliefs.x(i) = beliefs(i).mu(1);
+    all_beliefs.xdot(i) = beliefs(i).mu(2);
+    all_beliefs.y(i) = beliefs(i).mu(3);
+    all_beliefs.ydot(i) = beliefs(i).mu(4);
+  end
 end
-
 end % end function transform_beliefs
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

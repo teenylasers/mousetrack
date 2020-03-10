@@ -59,6 +59,8 @@ track.vx = vx;
 track.vy = vy;
 track.wpts = way_points;
 
+end % function track_generator
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function way_points_generator
 %
@@ -83,12 +85,14 @@ assert(y_axis.min < y_axis.max);
 % Use a helper function to generate way-points
 way_points = way_points_generator_monotonic_x(x_axis, y_axis);
 
+end % function way_points_generator
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function way_points_generator_monotonic_x
 %
 % Helper function to way_points_generator(). way-points will have monotonically increasing
 % x, y may change in any direction.
+
 
 function way_points = way_points_generator_monotonic_x(x_axis, y_axis)
 
@@ -127,3 +131,5 @@ end
 
 way_points.x = x;
 way_points.y = y;
+
+end % function way_points_generator_monotonic_x

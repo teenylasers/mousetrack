@@ -7,15 +7,30 @@
 % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
 
 function Q = ekf_get_cov_Q(dt)
+
+global FLAGS
+
 % Using Singer model for sampling time << acceleration/maneuvering time
 % From Blackman Page 33 without derivation
-sig_m = 50; % TODO: set realistic magnitudes
-tau = 1;
-Q = 2 * sig_m^2 / tau * ...
-    [dt^5/20 dt^4/8 0 0;
-     dt^4/8  dt^3/3 0 0;
-     0 0 dt^5/20 dt^4/8;
-     0 0 dt^4/8  dt^3/3];
+if FLAGS.model_accel
+  sig_m = 1; % TODO: set realistic magnitudes, or how to set values
+  tau = 1;
+  Q = 2 * sig_m^2 / tau * ...
+      [dt^5/20 dt^4/8 dt^3/6 0 0 0;
+       dt^4/8  dt^3/3 dt^2/2 0 0 0;
+       dt^3/6  dt^2/2   dt   0 0 0;
+       0 0 0 dt^5/20 dt^4/8 dt^3/6;
+       0 0 0 dt^4/8  dt^3/3 dt^2/2;
+       0 0 0 dt^3/6  dt^2/2   dt   ];
+else
+  sig_m = 50; % TODO: set realistic magnitudes, or how to set values
+  tau = 1;
+  Q = 2 * sig_m^2 / tau * ...
+      [dt^5/20 dt^4/8 0 0;
+       dt^4/8  dt^3/3 0 0;
+       0 0 dt^5/20 dt^4/8;
+       0 0 dt^4/8  dt^3/3];
+end
 
 % Q = [10 0 0 0;
 %       0 1 0 0;

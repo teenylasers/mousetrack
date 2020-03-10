@@ -7,7 +7,21 @@
 % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
 
 function A = ekf_get_mat_A(dt)
-A = [1 dt  0  0;
-     0  1  0  0;
-     0  0  1 dt;
-     0  0  0  1];
+
+global FLAGS
+
+if FLAGS.model_accel
+  A = [1 dt dt^2/2 0 0 0;
+       0  1   dt   0 0 0;
+       0  0    1   0 0 0;
+       0 0 0 1 dt dt^2/2;
+       0 0 0 0  1   dt  ;
+       0 0 0 0  0    1  ];
+else
+  A = [1 dt  0  0;
+       0  1  0  0;
+       0  0  1 dt;
+       0  0  0  1];
+end
+
+end % function ekf_get_mat_A

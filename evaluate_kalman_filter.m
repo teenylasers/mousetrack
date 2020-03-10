@@ -11,7 +11,9 @@
 %
 
 function [position_err_sq, velocity_err_sq] = evaluate_kalman_filter(...
-    FLAGS, true_track, meas, beliefs, plot_res)
+    true_track, meas, beliefs, plot_res)
+
+global FLAGS
 
 time_length = length(true_track.x);
 assert(length(beliefs) == time_length);
@@ -105,7 +107,7 @@ for j = 1:meas_dimensions
     subplot(meas_dimensions,1,j);
     plot(1:time_length, accum_innov, ...
          1:time_length, accum_innov_bound, 1:time_length, -1 * accum_innov_bound);
-    ylim([accum_innov_bound(end)*(-2) accum_innov_bound(end)*2]);
+    ylim([accum_innov_bound(end)*(-3) accum_innov_bound(end)*3]);
     xlabel('Time step'); ylabel(residual_content(j));
   end
 end

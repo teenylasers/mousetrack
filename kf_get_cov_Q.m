@@ -9,7 +9,7 @@
 function Q = kf_get_cov_Q(dt)
 % Using Singer model for sampling time << acceleration/maneuvering time
 % From Blackman Page 33 without derivation
-% sig_m = 1; % TODO: set realistic magnitudes
+% sig_m = 50; % TODO: set realistic magnitudes
 % tau = 1;
 % Q = 2 * sig_m^2 / tau * ...
 %     [dt^5/20 dt^4/8 0 0;
@@ -24,8 +24,10 @@ Q = [10 0 0 0;
 
 % Using constant velocity model,
 % http://www.robots.ox.ac.uk/~ian/Teaching/Estimation/LectureNotes2.pdf
-% q = 1000;
+% q = 50;
 % Q = q * [dt^3/3 dt^2/2   0      0;
 %          dt^2/2   dt     0      0;
 % 	   0       0  dt^3/3 dt^2/2;
 % 	   0       0  dt^2/2   dt  ];
+
+end % function kf_get_cov_Q
