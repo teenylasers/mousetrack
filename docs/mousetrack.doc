@@ -42,7 +42,7 @@ Finally, future state predictions are given by
 
 
 
-@subsection{@label{model1} Model 1. Constant velocity, Taylor expansion for measurement noise covariance}
+@subsection{@label{model1} Model 1. Nonlinear measurement matrix @m{C}, Taylor expansion for measurement noise covariance @m{R}}
 
 Radar measurements are in polar coordinates. We choose to track in cartesian coordinates for a more intuitive model of target motion. For a radar scan interval of time @m{T}, target motions are simply
 @M{
@@ -150,16 +150,7 @@ R &= \mathbf{J}
 \end{bmatrix}
 }
 
-@subsubsection{Implementation results}
-
-@numlist{
-@*	Singer model process covariance hasn't worked. The filter converges better with a time-invariant diagonal process covariance.
-@*	If we use a constant linear measurement covariance that doesn't depend on @m{\{r, \theta, \dot{r}\}}, velocity estimation converges then diverges. This is the case even with a linear (i.e. straight line) track.
-@*	Velocity estimation is consistently poor for @m{\dot{x}}, much better for @m{\dot{y}}. Implement extended Kalman filter to see whether the measurement model is the root cause.
-}
-
-
-@subsection{Model 2. Constant velocity, extended Kalman filter for measurement model}
+@subsection{@label{model2} Model 2. Nonlinear measurement model @m{m = c(s)}, extended Kalman filter for belief covariance update @m{C\hat{\Sigma}C^T}}
 
 The process model is unchanged from @link{model1}{Model 1} above, described by @eqref{kinetics} and @eqref{const_v_process}. The measurement vector is the radar's direct measurement,
 @M{m(k) &= c(s(k)) \nonumber \\
@@ -168,7 +159,7 @@ The process model is unchanged from @link{model1}{Model 1} above, described by @
 \sqrt{x^2 + y^2} \\
 \arctan{(-x/y)} \\
 -\dot{x}\sin{\theta} + \dot{y}\cos{\theta}
-\end{bmatrix}}
+\end{bmatrix} \label{eq:c_fxn}}
 The measurement noise covariance is
 @M{
 R = \begin{bmatrix}
@@ -191,4 +182,39 @@ where
  \frac{x^3\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^4}-\frac{x^2\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^3}+\frac{x^2\dot{y}}{(1+\frac{x^3}{y^2})^{3/2}y^3} &
  \frac{1}{\sqrt{1+\frac{x^2}{y^2}}}
 \end{bmatrix}
+}
+
+@subsection{@label{model3} Model 3. Extended Kalman filter with constant acceleration kinematic model}
+
+We augment @link{model2}{Model 2} above to include acceleration in the state, that is,
+@M{
+s = \begin{bmatrix} x \\ \dot{x} \\ \ddot{x} \\ y \\ \dot{y} \\ \ddot{y} \end{bmatrix},
+A = \begin{bmatrix}
+    1 & T & \frac{T^2}{2} & 0 & 0 & 0 \\
+    0 & 1 & T & 0 & 0 & 0 \\
+    0 & 0 & 1 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 1 & T & \frac{T^2}{2} \\
+    0 & 0 & 0 & 0 & 1 & T \\
+    0 & 0 & 0 & 0 & 0 & 1
+    \end{bmatrix}
+}
+The measurement model is still described by @eqref{c_fxn}; however, the Jacobian linearization now becomes
+@M{
+\mathbf{J}_c = \begin{bmatrix}
+ \frac{x}{\sqrt{x^2+y^2}} & 0 & 0 & \frac{y}{\sqrt{x^2+y^2}} & 0 & 0 \\
+ -\frac{1}{(1+\frac{x^2}{y^2})y} & 0 & 0 & \frac{x}{(1+\frac{x^2}{y^2})y^2} & 0 & 0 \\
+ -\frac{x^2\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^3} + \frac{\dot{x}}{\sqrt{1+\frac{x^2}{y^2}}y} - \frac{x\dot{y}}{(1+\frac{x^3}{y^2})^{3/2}y^2} &
+ \frac{x}{\sqrt{1+\frac{x^2}{y^2}}y} & 0 &
+ \frac{x^3\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^4}-\frac{x^2\dot{x}}{(1+\frac{x^3}{y^2})^{3/2}y^3}+\frac{x^2\dot{y}}{(1+\frac{x^3}{y^2})^{3/2}y^3} &
+ \frac{1}{\sqrt{1+\frac{x^2}{y^2}}} & 0
+\end{bmatrix}
+}
+
+@subsection{Implementation results and to-do's}
+
+@numlist{
+@*	With @link{model1}{Model 1}, velocity estimation is consistently poor or slow to catch up with ground truth. Either tune covariance matrices, or implement extended Kalman filter to see whether the measurement model is the root cause.
+@*	How to evaluate and compare models or filters?
+@*	With @link{model3}{Model 3}, the filter is unstable, seemingly because acceleration estimates swing wildly for a few time periods before it converges, by which time position estimation may have become irrecoverably wrong. Is the solution a better tuned covariance @m{Q} or to relate acceleration with measurement, i.e. modify @eqref{c_fxn}.
+@*	Visualize covariance, start with point cloud of @m{\{r, \theta, \dot{r}\}} using @m{\{\sigma_r, \sigma_\theta, \sigma_\dot{r}\}}, coordinate transform to @m{\{x, y, r\dot{r}\}} or @m{\{x, \dot{x}, \ddot{x}, y, \dot{y}, \ddot{y}\}}.
 }
