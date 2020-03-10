@@ -4,7 +4,7 @@
 % Returns a belief function belief that represents a new track.
 %
 % Input:
-% dets = an array of detections {r, theta, r_dot}, the last element is the latest
+% dets = an array of detections {r, theta, rdot}, the last element is the latest
 % detection. If FLAGS.debug_*, then dets is actually an array of measurements, detection
 % to measurement step is bypassed in debug mode.
 
@@ -13,10 +13,10 @@ function belief = initiate_track(FLAGS, dets)
 if FLAGS.run_kf || FLAGS.run_ekf
   r = dets(end).r;
   theta = dets(end).theta;
-  r_dot = dets(end).r_dot;
-  if isnan(r) || isnan(theta) || isnan(r_dot)
-    fprintf('Erroneous input: r = %f, theta = %f, r_dot = %f\n', ...
-            r, theta, r_dot);
+  rdot = dets(end).rdot;
+  if isnan(r) || isnan(theta) || isnan(rdot)
+    fprintf('Erroneous input: r = %f, theta = %f, rdot = %f\n', ...
+            r, theta, rdot);
     return;
   end
 elseif FLAGS.debug_kf || FLAGS.debug_ekf
@@ -26,28 +26,13 @@ elseif FLAGS.debug_kf || FLAGS.debug_ekf
   end
 end
 
-if FLAGS.debug_ekf
-  r = dets(1, end)
-  theta = dets(2, end)
-  r_dot = dets(3, end)
-end
-
 if FLAGS.run_kf
   m = kf_convert_detection_to_measurement(dets(end));
-  xdot = -r_dot * sin(theta);
-  ydot = r_dot * cos(theta);
+  xdot = -rdot * sin(theta);
+  ydot = rdot * cos(theta);
   belief.mu = [m(1); xdot; m(2); ydot];
   belief.sig = 1e9 * eye(length(belief.mu));
   belief.innov = zeros(length(m), 1);
-  belief.innov_cov = eye(length(belief.innov));
-elseif FLAGS.run_ekf || FLAGS.debug_ekf
-  x = -r * sin(theta);
-  y = r * cos(theta);
-  xdot = -r_dot * sin(theta);
-  ydot = r_dot * cos(theta);
-  belief.mu = [x; xdot; y; ydot];
-  belief.sig = 1e9 * eye(length(belief.mu));
-  belief.innov = zeros(length(dets(end)), 1);
   belief.innov_cov = eye(length(belief.innov));
 elseif FLAGS.debug_kf
   x = dets(1, end);
@@ -56,7 +41,29 @@ elseif FLAGS.debug_kf
   ydot = 0;
   belief.mu = [x; xdot; y; ydot];
   belief.sig = 1e9 * eye(length(belief.mu));
-  belief.innov = zeros(length(dets(end)),1);
+  belief.innov = zeros(size(dets,1),1);
+  belief.innov_cov = eye(length(belief.innov));
+elseif FLAGS.run_ekf
+  m = ekf_convert_detection_to_measurement(dets(end));
+  x = -r * sin(theta);
+  y = r * cos(theta);
+  xdot = -rdot * sin(theta);
+  ydot = rdot * cos(theta);
+  belief.mu = [x; xdot; y; ydot];
+  belief.sig = 1e9 * eye(length(belief.mu));
+  belief.innov = zeros(length(m), 1);
+  belief.innov_cov = eye(length(belief.innov));
+elseif FLAGS.debug_ekf
+  r = dets(1, end);
+  theta = dets(2, end);
+  rdot = dets(3, end);
+  x = -r * sin(theta);
+  y = r * cos(theta);
+  xdot = 0;
+  ydot = 0;
+  belief.mu = [x; xdot; y; ydot];
+  belief.sig = 1e9 * eye(length(belief.mu));
+  belief.innov = zeros(size(dets, 1), 1);
   belief.innov_cov = eye(length(belief.innov));
 end
 

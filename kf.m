@@ -2,8 +2,8 @@
 % function kf
 %
 % Input:
-% m = current measurement {x, y, r*r_dot}
-% det = current detection {r, theta, r_dot}, used for covariance R calculation
+% m = current measurement {x, y, r*rdot}
+% det = current detection {r, theta, rdot}, used for covariance R calculation
 % dt = time since the last state estimate
 % prev_belief = the previous belief function {mu, sig, innov, innov_cov}
 % future_times = a list of times from now to predict the state
@@ -55,81 +55,4 @@ for i = 1:prediction_length
   predictions.sig(i) = A * new_belief.sig * A' + Q;
 end
 
-%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  % State model
-%  %     s = [x; x_dot; y; y_dot]
-%  %     s1 = A * s + N(0,Q)
-%  % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
-%
-%  function A = get_mat_A(dt)
-%  A = [1 dt  0  0;
-%       0  1  0  0;
-%       0  0  1 dt;
-%       0  0  0  1];
-%
-%  function Q = get_cov_Q(dt)
-%  % Using Singer model for sampling time << acceleration/maneuvering time
-%  % From Blackman Page 33 without derivation
-%  % sig_m = 1; % TODO: set realistic magnitudes
-%  % tau = 1;
-%  % Q = 2 * sig_m^2 / tau * ...
-%  %     [dt^5/20 dt^4/8 0 0;
-%  %      dt^4/8  dt^3/3 0 0;
-%  %      0 0 dt^5/20 dt^4/8;
-%  %      0 0 dt^4/8  dt^3/3];
-%
-%  Q = [10 0 0 0;
-%        0 1 0 0;
-%        0 0 10 0;
-%        0 0 0 1];
-%
-%  % Using constant velocity model,
-%  % http://www.robots.ox.ac.uk/~ian/Teaching/Estimation/LectureNotes2.pdf
-%  % q = 1000;
-%  % Q = q * [dt^3/3 dt^2/2   0      0;
-%  %          dt^2/2   dt     0      0;
-%  % 	   0       0  dt^3/3 dt^2/2;
-%  % 	   0       0  dt^2/2   dt  ];
-%
-%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  % Measurement model
-%  %     m = [x; y; x*x_dot+y*y_dot ~ r*r_dot]
-%  %     m = C * s + N(0,R)
-%  % where N(0,R) is the gaussian measurement noise with zero-mean and covariance R.
-%
-%  function C = get_mat_C(s)
-%  C = [   1    0    0    0;
-%          0    0    1    0;
-%        s(2) s(1) s(4) s(3)];
-%
-%  function R = get_cov_R(det)
-%  r = det.r;
-%  theta = det.theta;
-%  r_dot = det.r_dot;
-%
-%  % r, r_dot, theta have stddev sig_r, sig_rdot, sig_theta, respectively
-%  var = get_detection_variance(det);
-%  sig_r = var.sig_r;
-%  sig_rdot = var.sig_rdot;
-%  sig_theta = var.sig_theta;
-%
-%  % Calculate measurement covariance R
-%  % If x = r*cos(theta), y = r*sin(theta), then:
-%  % sig_xx = sig_r^2 * cos(theta)^2 + r^2 * sig_theta^2 * sin(theta)^2;
-%  % sig_xy = cos(theta) * sin(theta) * (sig_r^2 - r^2 * sig_theta^2);
-%  % sig_xrrdot = r_dot * sig_r^2 * cos(theta);
-%  % sig_yy = r^2 * sig_theta^2 * cos(theta)^2 + sig_r^2 * sin(theta)^2;
-%  % sig_yrrdot = r_dot * sig_r^2 * sin(theta);
-%  % sig_rrdot = r_dot^2 * sig_r^2 + r^2 * sig_rdot^2;
-%
-%  % If x = -r*sin(theta), y = r*cos(theta), then:
-%  sig_xx = sig_r^2 * sin(theta)^2 + r^2 * sig_theta^2 * cos(theta)^2;
-%  sig_xy = cos(theta) * sin(theta) * (-sig_r^2 + r^2 * sig_theta^2);
-%  sig_xrrdot = -r_dot * sig_r^2 * sin(theta);
-%  sig_yy = r^2 * sig_theta^2 * sin(theta)^2 + sig_r^2 * cos(theta)^2;
-%  sig_yrrdot = r_dot * sig_r^2 * cos(theta);
-%  sig_rrdot = r_dot^2 * sig_r^2 + r^2 * sig_rdot^2;
-%
-%  R = 0.01 * [sig_xx sig_xy sig_xrrdot;
-%       sig_xy sig_yy sig_yrrdot;
-%       sig_xrrdot sig_yrrdot sig_rrdot];
+end % function kf

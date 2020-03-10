@@ -2,7 +2,7 @@
 % function ekf_get_mat_C
 %
 % Measurement model
-%     m = [r; theta; r_dot]
+%     m = [r; theta; rdot]
 %     m = c(s) + N(0,R)
 % where N(0,R) is the gaussian measurement noise with zero-mean and covariance R.
 

@@ -3,15 +3,15 @@
 
 % Terminology
 % Track = ground truth of the target's state over time
-% Detection = raw data from the sensor (radar), ie {r, theta, r_dot}
-% Measurement = a vector that is converted from detection, {x, y, r*r_dot}
+% Detection = raw data from the sensor (radar), ie {r, theta, rdot}
+% Measurement = a vector that is converted from detection, {x, y, r*rdot}
 
 % Structs
 % x_axis = {min, max, extent}, in units of m
 % y_axis = {min, max, extent}, in units of m
 % radar_coords = {p, R, bearing}, bearing is the angle that generates the rotation matrix R
 % track = {x, y, vx, vy, wpts}, wpts = waypoints that cubic spline uses to define the track
-% detection = {r, theta, r_dot}
+% detection = {r, theta, rdot}
 % belief_function = {mu, sig, innov, innov_cov}, innov = innovation = pre-filter residual
 
 % Global variables
@@ -30,8 +30,8 @@ init_setup();
 % Only one of the following should be >0.
 FLAGS.run_kf = 0;         % run tracker using linear kalman filter
 FLAGS.debug_kf = 0;       % debug tracker with linear kalman filter
-FLAGS.run_ekf = 0;        % run tracker using extended kalman filter
-FLAGS.debug_ekf = 1;      % debug tracker with extended kalman filter
+FLAGS.run_ekf = 1;        % run tracker using extended kalman filter
+FLAGS.debug_ekf = 0;      % debug tracker with extended kalman filter
 
 % Generate a single ground-truth track
 N = 600/15/dt + round(randn(1) * 22);
@@ -44,7 +44,9 @@ beliefs = [];
 for ti = 1:N % ti = time index
   % Get the next measurement
   [new_dets, new_meas] = get_next_measurement(FLAGS, tracks(1), ti);
-  dets = [dets new_dets];
+  if FLAGS.run_kf || FLAGS.run_ekf
+    dets = [dets new_dets];
+  end
   meas = [meas new_meas];
 
   if length(beliefs)==0 || sum(sum(beliefs(end).sig))==0
@@ -66,10 +68,10 @@ for ti = 1:N % ti = time index
   % ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
   % disp('Press any key to continue.\n'); pause;
 end
-evaluate_kalman_filter(tracks(1), meas, beliefs, 1);
+evaluate_kalman_filter(FLAGS, tracks(1), meas, beliefs, 1);
 
 % Visualize the track(s) and measurements
-visualize_tracker_results(radar_coords, tracks, dets, beliefs);
+visualize_tracker_results(FLAGS, radar_coords, tracks, dets, meas, beliefs);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper functions
@@ -78,32 +80,34 @@ function track = generate_track(FLAGS, N)
 global x_axis
 global y_axis
 global dt
-if FLAGS.debug_kf
-  track = track_generator_kf_debug(x_axis, y_axis, N, dt);
-elseif FLAGS.debug_ekf
-  track = track_generator_ekf_debug(x_axis, y_axis, N, dt);
+if FLAGS.debug_kf || FLAGS.debug_ekf
+  track = track_generator_debug(FLAGS, x_axis, y_axis, N, dt);
 else
   track = track_generator(x_axis, y_axis, N, dt);
 end
-end
+end % function generate_track
 
 function [new_dets, new_meas] = get_next_measurement(FLAGS, track, ti)
 global radar_coords
 if FLAGS.debug_kf
   new_dets.r = nan;
   new_dets.theta = nan;
-  new_dets.r_dot = nan;
+  new_dets.rdot = nan;
   new_meas = measurement_generator_kf_debug(track, ti);
 elseif FLAGS.debug_ekf
   new_dets.r = nan;
   new_dets.theta = nan;
-  new_dets.r_dot = nan;
+  new_dets.rdot = nan;
   new_meas = measurement_generator_ekf_debug(track, ti);
 else
   new_dets = detections_generator(track, ti, radar_coords);
-  new_meas = kf_convert_detection_to_measurement(new_dets);
+  if FLAGS.run_kf
+    new_meas = kf_convert_detection_to_measurement(new_dets);
+  elseif FLAGS.run_ekf
+    new_meas = ekf_convert_detection_to_measurement(new_dets);
+  end
 end
-end
+end % function get_next_measurement
 
 function [new_belief, predictions] = run_filter(FLAGS, ...
                                                 new_meas, new_dets, dt, prev_belief, ...
@@ -113,4 +117,4 @@ if FLAGS.debug_kf || FLAGS.run_kf
 elseif FLAGS.debug_ekf || FLAGS.run_ekf
   [new_belief, predictions] = ekf(new_meas, new_dets, dt, prev_belief, future_times);
 end
-end
+end % function run_filter

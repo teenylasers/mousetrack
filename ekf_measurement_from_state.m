@@ -8,6 +8,6 @@ y = s(3);
 ydot = s(4);
 r = sqrt(x^2+y^2);
 theta = atan(-x/y);
-r_dot = -xdot * sin(theta) + ydot * cos(theta);
-m = [r; theta; r_dot]
+rdot = -xdot * sin(theta) + ydot * cos(theta);
+m = [r; theta; rdot];
 end

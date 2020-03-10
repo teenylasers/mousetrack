@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Visualization: overlay detections in the radar frame on track in the global frame
-function visualize_tracker_results(radar_coords, tracks, dets, beliefs)
+function visualize_tracker_results(FLAGS, radar_coords, tracks, dets, meas, beliefs)
 
 figure; hold on;
 
@@ -21,6 +21,15 @@ if ~isempty(dets)
   end
 end
 
+% Plot measurements over time in the global frame
+if isempty(dets) && ~isempty(meas)
+  if FLAGS.run_kf || FLAGS.debug_kf
+    plot(meas(1,:), meas(2,:), 'o', 'Color', det_colour);
+  elseif FLAGS.run_ekf || FLAGS.debug_ekf
+    plot(-meas(1,:).*sin(meas(2,:)), meas(1,:).*cos(meas(2,:)), 'o', 'Color', det_colour);
+  end
+end
+
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
   tr = tracks(i);
@@ -36,18 +45,21 @@ if plot_xydot
   quiver(all_beliefs.x, all_beliefs.y, all_beliefs.xdot, all_beliefs.ydot, 'Color', belief_colour);
 end
 
-legend('detections', 'track true path', 'estimated track', 'Location', 'northwest');
+legend('dets/meas', 'track true path', 'estimated track', 'Location', 'northwest');
 global x_axis
 global y_axis
-xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
-ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
+%xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
+%ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
 hold off;
+
+end % end function visualize_tracker_results
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function transform_beliefs
 %
 % Transform time sequenced belief functions beliefs for plotting and visualization
 %
+
 function all_beliefs = transform_beliefs(beliefs)
 
 for i = 1:length(beliefs)
@@ -56,6 +68,8 @@ for i = 1:length(beliefs)
   all_beliefs.y(i) = beliefs(i).mu(3);
   all_beliefs.ydot(i) = beliefs(i).mu(4);
 end
+
+end % end function transform_beliefs
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function transform_detections
@@ -67,18 +81,20 @@ function all_dets = transform_detections(dets, radar_coords)
 
 for i = 1:length(dets)
   all_dets.r(i) = dets(i).r;
-  all_dets.r_dot(i) = dets(i).r_dot;
+  all_dets.rdot(i) = dets(i).rdot;
   all_dets.theta(i) = dets(i).theta;
   all_dets.xy(:,i) = radar_coords.p + ...
       dets(i).r * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
   all_dets.vxy(:,i) = radar_coords.p + ...
-      dets(i).r_dot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
+      dets(i).rdot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
 
   all_dets.r0(i) = dets(i).r0;
-  all_dets.r_dot0(i) = dets(i).r_dot0;
+  all_dets.rdot0(i) = dets(i).rdot0;
   all_dets.theta0(i) = dets(i).theta0;
   all_dets.xy0(:,i) = radar_coords.p + ...
       dets(i).r0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
   all_dets.vxy0(:,i) = radar_coords.p + ...
-      dets(i).r_dot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
+      dets(i).rdot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
 end
+
+end % end functon transform_detections

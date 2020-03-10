@@ -2,8 +2,8 @@
 % function ekf
 %
 % Input:
-% m = current measurement {x, y, r*r_dot}
-% det = current detection {r, theta, r_dot}, used for covariance R calculation
+% m = current measurement {x, y, r*rdot}
+% det = current detection {r, theta, rdot}, used for covariance R calculation
 % dt = time since the last state estimate
 % prev_belief = the previous belief function {mu, sig, innov, innov_cov}
 % future_times = a list of times from now to predict the state
@@ -55,4 +55,4 @@ for i = 1:prediction_length
   predictions.sig(i) = A * new_belief.sig * A' + Q;
 end
 
-end
+end % function ekf

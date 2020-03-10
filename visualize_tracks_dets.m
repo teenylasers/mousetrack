@@ -52,24 +52,24 @@ end
 function all_dets = transform_detections(dets, radar_coords)
 
 % all_dets.r = zeros(1, length(dets));
-% all_dets.r_dot = zeros(1, length(dets));
+% all_dets.rdot = zeros(1, length(dets));
 % all_dets.theta = zeros(1, length(dets));
 % all_dets.xy = zeros(2, length(dets));
 % all_dets.vxy = zeros(2, length(dets));
 for i = 1:length(dets)
   all_dets.r(i) = dets(i).r;
-  all_dets.r_dot(i) = dets(i).r_dot;
+  all_dets.rdot(i) = dets(i).rdot;
   all_dets.theta(i) = dets(i).theta;
   all_dets.xy(:,i) = radar_coords.p + ...
       dets(i).r * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
   all_dets.vxy(:,i) = radar_coords.p + ...
-      dets(i).r_dot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
+      dets(i).rdot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
 
   all_dets.r0(i) = dets(i).r0;
-  all_dets.r_dot0(i) = dets(i).r_dot0;
+  all_dets.rdot0(i) = dets(i).rdot0;
   all_dets.theta0(i) = dets(i).theta0;
   all_dets.xy0(:,i) = radar_coords.p + ...
       dets(i).r0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
   all_dets.vxy0(:,i) = radar_coords.p + ...
-      dets(i).r_dot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
+      dets(i).rdot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
 end
