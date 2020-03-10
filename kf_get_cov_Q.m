@@ -2,7 +2,7 @@
 % function kf_get_cov_Q
 %
 % State model
-%     s = [x; x_dot; y; y_dot]
+%     s = [x; xdot; y; ydot]
 %     s1 = A * s + N(0,Q)
 % where N(0,Q) is the gaussian process noise with zero-mean and covariance Q.
 
