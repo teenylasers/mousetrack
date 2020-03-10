@@ -88,6 +88,7 @@ end
 if plot_res
   figure;
   title('Measurement residual');
+  num_sigs_viz = 5;
 end
 meas_dimensions = length(beliefs(1).innov);
 if FLAGS.debug_kf || FLAGS.run_kf
@@ -107,7 +108,7 @@ for j = 1:meas_dimensions
     subplot(meas_dimensions,1,j);
     plot(1:time_length, accum_innov, ...
          1:time_length, accum_innov_bound, 1:time_length, -1 * accum_innov_bound);
-    ylim([accum_innov_bound(end)*(-3) accum_innov_bound(end)*3]);
+    ylim([accum_innov_bound(end)*(-1*num_sigs_viz) accum_innov_bound(end)*num_sigs_viz]);
     xlabel('Time step'); ylabel(residual_content(j));
   end
 end
