@@ -30,10 +30,17 @@ for i = 1:time_length
     naive_dx = true_track.x(i) + meas(1,i) * sin(meas(2,i));
     naive_dy = true_track.y(i) - meas(1,i) * cos(meas(2,i));
   end
-  dx = true_track.x(i) - beliefs(i).mu(1);
-  dy = true_track.y(i) - beliefs(i).mu(3);
-  dvx = true_track.vx(i) - beliefs(i).mu(2);
-  dvy = true_track.vy(i) - beliefs(i).mu(4);
+  if FLAGS.model_accel
+    dx = true_track.x(i) - beliefs(i).mu(1);
+    dvx = true_track.vx(i) - beliefs(i).mu(2);
+    dy = true_track.y(i) - beliefs(i).mu(4);
+    dvy = true_track.vy(i) - beliefs(i).mu(5);
+  else
+    dx = true_track.x(i) - beliefs(i).mu(1);
+    dvx = true_track.vx(i) - beliefs(i).mu(2);
+    dy = true_track.y(i) - beliefs(i).mu(3);
+    dvy = true_track.vy(i) - beliefs(i).mu(4);
+  end
   p_err(i) = sqrt(dx^2 + dy^2);
   v_err(i) = sqrt(dvx^2 + dvy^2);
   naive_p_err(i) = sqrt(naive_dx^2 + naive_dy^2);
@@ -43,11 +50,20 @@ belief_x = zeros(1, time_length);
 belief_y = zeros(1, time_length);
 belief_vx = zeros(1, time_length);
 belief_vy = zeros(1, time_length);
-for i = 1:time_length
-  belief_x(i) = beliefs(i).mu(1);
-  belief_y(i) = beliefs(i).mu(3);
-  belief_vx(i) = beliefs(i).mu(2);
-  belief_vy(i) = beliefs(i).mu(4);
+if FLAGS.model_accel
+  for i = 1:time_length
+    belief_x(i) = beliefs(i).mu(1);
+    belief_vx(i) = beliefs(i).mu(2);
+    belief_y(i) = beliefs(i).mu(4);
+    belief_vy(i) = beliefs(i).mu(5);
+  end
+else
+  for i = 1:time_length
+    belief_x(i) = beliefs(i).mu(1);
+    belief_vx(i) = beliefs(i).mu(2);
+    belief_y(i) = beliefs(i).mu(3);
+    belief_vy(i) = beliefs(i).mu(4);
+  end
 end
 
 if plot_res
