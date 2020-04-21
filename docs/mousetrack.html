@@ -380,8 +380,14 @@ b(s_k) &amp;= \sum_{i=1}^{J_b} w_{b,i}\mathcal{N}(\mu_b, \Sigma_b, s_k)
 		   + \sum_{i=1}^{J_{\beta, k-1}} w_{\beta,k-1,i} \mathcal{N}(A\mu_{k-1,i}, Q + A\Sigma_{k-1,i}A^T, s_k)
 \end{align}\]
 \[\begin{align} \label{eq:phd_gmm1_update}
-\beta_{k|k}(s_k) = \frac{\sum_{j=1}^M \beta_{k|k-1}(s_k)\mathcal{N}(c(s_k), R, m_j)}
-    		   {\sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c({\mu_{k|k-1,i}}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)}
+\beta_{k|k}(s_k)
+&amp;= \frac{\sum_{j=1}^M \beta_{k|k-1}(s_k)\mathcal{N}(c(s_k), R, m_j)}
+    	{\sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c({\mu_{k|k-1,i}}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)} \\
+&amp;= \frac{(\sum_{i=1}^{J_{\beta, k-1}} w_{\beta,k-1,i} \mathcal{N}(A\mu_{k-1,i}, Q + A\Sigma_{k-1,i}A^T, s_k))(\sum_{j=1}^M \mathcal{N}(c(s_k), R, m_j))}
+   	{\sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c({\mu_{k|k-1,i}}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)} \nonumber
+\end{align}\]
+\[\begin{align}
+\log(\beta_{k|k}(s_k)) = \log(\sum) + \log(\sum) - \log(\sum\sum)
 \end{align}\]
 <p>where \(\mathbf{J}_c\) is given by \eqref{eq:ekf_jc}.</p>
 <p>We make no assumption on where new targets are more likely to pop up, so we apply a constant target birth probability to measurements that suggest the possibility of a new target, \(b(s_k) = const\).</p>
