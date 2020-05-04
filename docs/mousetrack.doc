@@ -4,6 +4,13 @@
 
 @contents{}
 
+
+
+#######################################################################
+#######################################################################
+
+
+
 @section{General Bayesian Estimation}
 
 Define
@@ -17,16 +24,30 @@ Define
 In recursive implementation, @m{\beta_{k|k-1}} predicts the believe function based on the previous belief function @m{\beta_{k-1}(s_{k-1})} and the state evolution model @m{P{s_k, s_{k-1}}}. It is then adjusted using the measurement model @m{P(m_k, s_k)} to arrive at the latest belief function @m{\beta_k(s_k)}.
 
 
+
+#######################################################################
+#######################################################################
+
+
+
 @section{Kalman Filter}
+
+
+#######################################################################
+
 
 @subsection{Derivation from general Bayesian estimation}
 
-The belief function @m{\beta} describes the probability distribution of where @m{s_k} is in the state coordinates. For computational convenience, we model @m{\beta}, @m{P_k(m_k, s_k)}, and @m{P_k{s_k, s_{k-1}}} each as a multivariate Gaussian.
+The belief function @m{\beta} describes the probability distribution of where @m{s_k} is in the state coordinates. For computational convenience, we model @m{\beta}, @m{P_k(m_k, s_k)}, and @m{P_k(s_k, s_{k-1})} each as a multivariate Gaussian.
 @M{
 P_k(s_k, s_{k-1}) &= \mathcal{N}(As_{k-1}, Q, s_k) \nonumber \\
 P_k(m_k, s_k) &= \mathcal{N}(Cs_k, R, m_k) \nonumber \\
 \beta(s_k) &= \mathcal{N}(\mu_k, \Sigma_k, s_k)
 }
+
+
+#######################################################################
+
 
 @subsection{The model}
 
@@ -57,6 +78,8 @@ Finally, future state predictions are given by
 @M{\mu_{k+1|k} = A\mu_{k|k}}
 @M{\Sigma_{k+1|k} = A\Sigma_{k|k}A^T + Q}
 
+
+#######################################################################
 
 
 @subsection{Implementations}
@@ -89,18 +112,22 @@ m_k &= Cs_k \nonumber \\
 \end{bmatrix}
 \begin{bmatrix} x \\ \dot{x} \\ y \\ \dot{y} \end{bmatrix}
 }
-TODO: the form of @m{m = Cs} comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments, e.g. EKF or UKF?
+@b{TODO}: the form of @m{m = Cs} comes from [Radar Data Processing by Farina and Studer, Section 4.6], derive, and alternative treatments, e.g. EKF or UKF?
 
 Notes:
 @list{
 @* Acceleration is not included in the state model for now.
 }
 
+
+#######################################################################
+
+
 @subsubsection{Process covariance}
 
 Process noise may include white noise from e.g. the RF mixer, correlated noise e.g. angular scintillation, and as a way to treat target acceleration or maneuvering using the Singer model. For now, we use the Singer model for slowly maneuvering targets, that is, sampling time @m{T \ll \tau_m} the maneuver time constant. The resulting covariance is stated here without derivation, adapted from [Blackman book, Page 33].
 
-TODO: derive, model other noise
+@b{TODO}: derive, model other noise
 
 @M{
 Q = \frac{2\sigma^2_m}{\tau_m}
@@ -111,6 +138,10 @@ Q = \frac{2\sigma^2_m}{\tau_m}
 0 & 0 & \frac{T^4}{8} & \frac{T^3}{3}
 \end{bmatrix}
 }
+
+
+#######################################################################
+
 
 @subsubsection{Coordinate transform for measurement covariance}
 
@@ -170,6 +201,10 @@ R &= \mathbf{J}
 \end{bmatrix}
 }
 
+
+#######################################################################
+
+
 @subsection{@label{kalman_model2} Model 2. Nonlinear measurement model @m{m = c(s)}, extended Kalman filter for belief covariance update @m{C\hat{\Sigma}C^T}}
 
 The process model is unchanged from @link{model1}{Model 1} above, described by @eqref{kinetics} and @eqref{const_v_process}. The measurement vector is the radar's direct measurement,
@@ -204,6 +239,10 @@ where
 \end{bmatrix}
 }
 
+
+#######################################################################
+
+
 @subsection{@label{kalman_model3} Model 3. Extended Kalman filter with constant acceleration kinematic model}
 
 We augment @link{kalman_model2}{Model 2} above to include acceleration in the state, that is,
@@ -230,6 +269,10 @@ The measurement model is still described by @eqref{c_fxn}; however, the Jacobian
 \end{bmatrix}
 }
 
+
+#######################################################################
+
+
 @subsection{Implementation results and to-do's}
 
 @numlist{
@@ -240,7 +283,17 @@ The measurement model is still described by @eqref{c_fxn}; however, the Jacobian
 }
 
 
+
+#######################################################################
+#######################################################################
+
+
+
 @section{Probabilistic Hypothesis Density (PHD) Filter}
+
+
+#######################################################################
+
 
 @subsection{Derivation from general Bayesian estimation}
 
@@ -259,6 +312,10 @@ where @m{P(s_k, s_{k-1})} is the probability density of a transition from @m{s_{
 }
 where @m{P_d} is the probability of detection, @m{M} is the number of measurements, @m{j} is the index that keeps track of all @m{M} measurements, @m{P(m_j, s_k)} is the @emph{likelihood}, i.e. the joint probability density of getting the @m{j}-th measurement given state @m{s_k}, @m{\kappa(m_s)} is the clutter model, the probability distribution of clutter points over the observation space, @m{\mu_{FA}} is the Poisson false alarm rate.
 
+
+#######################################################################
+
+
 @subsection{Implement using Gaussian mixture model}
 
 So far, we have made no assumption about the form the various probability functions take. To enable a closed-form model, we use the Gaussian mixture model:
@@ -276,7 +333,7 @@ Since all input functions to the estimation of belief functions @m{\beta} are ga
 }
 
 Use the following identities and rules for Gaussian multiplication and integration
-@M{
+@M{\label{eq:gaussian_swap_variables}
 \mathcal{N}(As+b, Q, x) = |A|\mathcal{N}(A^{-1}(x-b),A^{-1}RA^{-T},s)
 }
 @M{
@@ -309,38 +366,21 @@ and @eqref{phd_update} becomes
     	{\kappa(m_j)\mu_{FA} + P_d \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(C\mu_{k|k-1,i}, R+C\Sigma_{k|k-1,i}C^T, m_j)} \label{eq:phd_update_gmm}
 }
 
-@subsubsection{Model 1. EKF-style measurement model, @m{P_s = 1}, @m{P_d = 1}, @m{\mu_{FA} = 0}}
-To start, we assume the probability of target survival and the probability of detection are both 1. For further simplification to test the model, we set false alarm distribution to 0. We follow the models used in extended Kalman filters. The process model is given by @eqref{const_v_process}; the measurement model is @eqref{c_fxn}. The prediction and update equations become
-@M{ \label{eq:phd_gmm1_predict}
-\beta_{k|k-1}(s_k) = \sum_{i=1}^{J_b} w_{b,i} \mathcal{N}(\mu_b, \Sigma_b, s_k)
-		   + \sum_{i=1}^{J_{\beta, k-1}} w_{\beta,k-1,i} \mathcal{N}(A\mu_{k-1,i}, Q + A\Sigma_{k-1,i}A^T, s_k)
-}
-@M{ \label{eq:phd_gmm1_update}
-\beta_{k|k}(s_k) = \frac{\sum_{j=1}^M \beta_{k|k-1}(s_k)\mathcal{N}(c(s_k), R, m_j)}
-    		   {\sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c({\mu_{k|k-1,i}}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)}
-}
-where @m{\mathbf{J}_c} is given by @eqref{ekf_jc}.
+We notice that @m{\mathcal{N}(Cs_k, R, m_j)} in the numerator expresses the probability density in measurement space instead of state space. One way to map to state space is to use @eqref{gaussian_swap_variables}, @m{\mathcal{N}(Cs_k, R, m_j) = |C|\mathcal{N}(C^{-1}m_j, C^{-1}TC^{-T}, s_k)}. However, @m{C} is often not a square matrix, measurement space usually has lower dimensions than state space. Therefore, we cannot meaningfully calculate and use @m{C^{-1}}. There are several ways to proceed:
 
-
-We make no assumption on where new targets are more likely to pop up, so we apply a constant target birth probability to measurements that suggest the possibility of a new target, @m{b(s_k) = const}.
-
-@b{Loose ends:}
 @numlist{
-@*	In @eqref{phd_gmm1_update}, the denominator gaussian's covariance is the residual covariance. Why?
-@*
-}
+@*	Eigen-decomposition @b{TODO}: how does it help?
+@*	Use numerically large covariance in directions that ill-characterized by the measurements
+@*	@eqref{phd_update_gmm} can be expressed as a weighted sum of Kalman filters. The form of Kalman filter side-steps the need to invert @m{C}.}
 
 
-
-@subsubsection{Model 2. Reinstate clutter and false alarm, @m{\kappa(m_j)} and @m{\mu_{FA}}}
-
-@M{
-\beta_{k|k}(s_k) = \frac{\sum_{j=1}^M \beta_{k|k-1}(s_k)\mathcal{N}(c(s_k), R, m_j)}
-    	{\sum_{j=1}^M\kappa(m_j)\mu_{FA} + \sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c(\mu_{k|k-1,i}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)}
-}
+@b{TODO}: what does the inverse of a rectangular @m{C} really mean? What happens when measurement space has lower or higher dimensions than state space?
 
 
-@subsubsection{The connection between Kalman filter and  PHD filter with Gaussian mixture model}
+#######################################################################
+
+
+@subsubsection{The Gaussian mixture PHD filter as a weighted sum of Kalman filters}
 We can re-write @eqref{phd_update_gmm} as a sum of Kalman filter updates. We expand @m{\beta_{k|k-1}(s_k)}, and setting aside the target birth probability distribution @m{b(s_k)} for now, since it is usually handled as a separate target initiation step in Kalman filter implementations.
 @M{
 \beta_{k|k}(s_k)
@@ -383,5 +423,42 @@ Putting it all together,
 @M{
 \beta_{k|k}(s_k)
 &=(1-P_d)\beta_{k|k-1}(s_k) + P_d \sum_{j=1}^M
-   \frac{\sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(C\mu_{k|k-1,i}, R+C\Sigma_{k|k-1,i}C^T, m_j)\mathcal{N}(\mu_{k|k-1,i} + K(m_j - C\mu_{k|k-1,i}), (I-KC)\Sigma_{k|k-1,i}, s)}
+   \frac{\sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(C\mu_{k|k-1,i}, R+C\Sigma_{k|k-1,i}C^T, m_j)\mathcal{N}(\mu_{k|k-1,i} + K(m_j - C\mu_{k|k-1,i}), (I-KC)\Sigma_{k|k-1,i}, s_k)}
    	{\kappa(m_j)\mu_{FA} + P_d \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(C\mu_{k|k-1,i}, R+C\Sigma_{k|k-1,i}C^T, m_j)}}
+
+
+
+#######################################################################
+
+
+@subsubsection{Model 1. EKF-style measurement model, @m{P_s = 1}, @m{P_d = 1}, @m{\mu_{FA} = 0}}
+To start, we assume the probability of target survival and the probability of detection are both 1. For further simplification to test the model, we set false alarm distribution to 0. We follow the models used in extended Kalman filters. The process model is given by @eqref{const_v_process}; the measurement model is @eqref{c_fxn}. The prediction and update equations become
+@M{ \label{eq:phd_gmm1_predict}
+\beta_{k|k-1}(s_k) = b(s_k)  + \sum_{i=1}^{J_{\beta, k-1}} w_{\beta,k-1,i} \mathcal{N}(A\mu_{k-1,i}, Q + A\Sigma_{k-1,i}A^T, s_k)
+}
+@M{ \label{eq:phd_gmm1_update}
+\beta_{k|k}(s_k)
+= \frac{\sum_{j=1}^M \sum_{i=1}^{J_{\beta, k-1}} w_{\beta,k|k-1,i} \mathcal{N}(C\mu_{k|k-1,i}, R+C\Sigma_{k|k-1,i}C^T, m_j)\mathcal{N}(\mu_{k|k-1,i} + K(m_j - C\mu_{k|k-1,i}), (I-KC)\Sigma_{k|k-1,i}, s_k)}
+   	{\sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c({\mu_{k|k-1,i}}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)}
+}
+where @m{\mathbf{J}_c} is given by @eqref{ekf_jc}.
+
+
+We make no assumption on where new targets are more likely to pop up, so we apply a constant target birth probability to measurements that suggest the possibility of a new target, @m{b(s_k) = const}.
+
+@b{TODO:}
+@numlist{
+@*	In @eqref{phd_gmm1_update}, the denominator gaussian's covariance is the residual covariance. Why?
+@*
+}
+
+
+#######################################################################
+
+
+@subsubsection{Model 2. Reinstate clutter and false alarm, @m{\kappa(m_j)} and @m{\mu_{FA}}}
+
+@M{
+\beta_{k|k}(s_k) = \frac{\sum_{j=1}^M \beta_{k|k-1}(s_k)\mathcal{N}(c(s_k), R, m_j)}
+    	{\sum_{j=1}^M\kappa(m_j)\mu_{FA} + \sum_{j=1}^M \sum_{i=1}^{J_{\beta,k|k-1}} w_{\beta,k|k-1,i} \mathcal{N}(c(\mu_{k|k-1,i}), \mathbf{J}_c \Sigma_{k|k-1,i} \mathbf{J}_c^T + R, m_j)}
+}
