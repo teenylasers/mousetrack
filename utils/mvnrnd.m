@@ -13,6 +13,9 @@ assert(size(mu,2)==1, 'mu should be a column vector.');
 assert(size(sig,1)==size(sig,2), 'sig should be a square matrix.');
 d = size(mu,1);
 assert(size(sig,1)==d,'Dimensions of mu and sig do not match.');
+if nargin==2
+  N = 500;
+end
 
 % Generate R
 R = [];
