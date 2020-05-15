@@ -3,7 +3,7 @@
 %
 
 
-function visualize_gaussian(mu, sig)
+function visualize_gaussian(mu, sig, weight, color)
 
 % Check that the input describes a 2D gaussian
 assert(prod(size(mu))==length(mu), 'mu must be a vector.')
@@ -14,12 +14,27 @@ if (size(mu,1)==1)
 end
 assert(size(sig,1)==2 && size(sig,2)==2, 'sig must be a 2x2 matrix.');
 
+if nargin==2
+  weight = 1;
+end
+
 % Draw confidence ellipse with particle swarm
 ellipse = gaussian_confidence_ellipse(mu, sig);
+
 dots = mvnrnd(mu, sig);
-plot(ellipse(1,:), ellipse(2,:),'-');
-hold;
-plot(dots(1,:), dots(2,:), '.');
+dots_height = [];
+for i = 1:size(dots,2)
+  h = normpdf(mu, sig, dots(:,i)) * weight;
+  dots_height(end+1) = h;
+end
+
+if nargin==2 || nargin==3
+  plot(ellipse(1,:), ellipse(2,:),'-');
+  plot3(dots(1,:), dots(2,:), dots_height, '.');
+else
+  plot(ellipse(1,:), ellipse(2,:),'-', 'Color', color);
+  plot3(dots(1,:), dots(2,:), dots_height, '.', 'Color', color);
+end
 
 end
 

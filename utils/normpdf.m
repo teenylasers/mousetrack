@@ -1,5 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Evaluate a multivariate normal (Gaussian) pdf with mean mu and covariance sig at x
+% function y = normpdf(mu, sig, x)
 
 function y = normpdf(mu, sig, x)
 
