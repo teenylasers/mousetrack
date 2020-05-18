@@ -1,21 +1,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function initiate_track
 %
-% Returns a belief function belief that represents a new track.
+% Given a detection and the corresponding measurement vector, return a belief function
+% that represents a new track. Decisions on whether this detection *ought* to initiate a
+% new track is made elsewhere.
 %
 % Input:
-% dets = an array of detections {r, theta, rdot}, the last element is the latest
-% detection. If FLAGS.debug_*, then dets is actually an array of measurements, detection
-% to measurement step is bypassed in debug mode.
+% d = a detection
+% m = the corresponding measurement vector
 
-function belief = initiate_track(dets)
+function belief = initiate_track(d, m)
 
 global FLAGS
 
 if FLAGS.run_kf || FLAGS.run_ekf
-  r = dets(end).r;
-  theta = dets(end).theta;
-  rdot = dets(end).rdot;
+  r = d.r;
+  theta = d.theta;
+  rdot = d.rdot;
   if isnan(r) || isnan(theta) || isnan(rdot)
     fprintf('Erroneous input: r = %f, theta = %f, rdot = %f\n', ...
             r, theta, rdot);
@@ -29,29 +30,27 @@ elseif FLAGS.debug_kf || FLAGS.debug_ekf
 end
 
 if FLAGS.run_kf
-  m = kf_convert_detection_to_measurement(dets(end));
   x = m(1);
   y = m(2);
   xdot = -rdot * sin(theta);
   ydot = rdot * cos(theta);
   belief.innov = zeros(length(m), 1);
 elseif FLAGS.debug_kf
-  x = dets(1, end);
+  x = dets(1);
   xdot = 0;
-  y = dets(2, end);
+  y = dets(2);
   ydot = 0;
   belief.innov = zeros(size(dets,1),1);
 elseif FLAGS.run_ekf
-  m = ekf_convert_detection_to_measurement(dets(end));
   x = -r * sin(theta);
   y = r * cos(theta);
   xdot = -rdot * sin(theta);
   ydot = rdot * cos(theta);
   belief.innov = zeros(length(m), 1);
 elseif FLAGS.debug_ekf
-  r = dets(1, end);
-  theta = dets(2, end);
-  rdot = dets(3, end);
+  r = dets(1);
+  theta = dets(2);
+  rdot = dets(3);
   x = -r * sin(theta);
   y = r * cos(theta);
   xdot = 0;
@@ -84,7 +83,7 @@ belief.innov_cov = eye(length(belief.innov));
 %   belief.innov_cov = zeros(3);
 % else
 %   prev_meas = convert_detection_to_measurement(dets(length(dets)-1));
-%   curr_meas = convert_detection_to_measurement(dets(end));
+%   curr_meas = convert_detection_to_measurement(det);
 %   global dt
 %   xdot = (curr_meas(1)-prev_meas(1))/dt;
 %   ydot = (curr_meas(2)-prev_meas(2))/dt;

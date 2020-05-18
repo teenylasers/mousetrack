@@ -1,7 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function track_generator_ekf_debug
 %
-% Generates a track, returns a vector (length N) that represents points along the track.
+% Generates a track, using (e)kf_get_mat_A/cov_Q, for debug purposes, so that the (e)kf
+% filter should exactly match the track. Returns a vector (length N) that represents points
+% along the track.
 %
 % x_axis, y_axis:
 % The extent of the 2D space that the track can occupy. x_axis and y_axis are each a
@@ -63,8 +65,8 @@ for i = 2:N
     vy(i) = s(5);
     ay(i) = s(6);
   else
-    s = A * [x(i-1); vx(i-1); y(i-1); vy(i-1)];
-    %+ get_random_gaussian_distr_vectors(zeros(size(A,1),1), Q, 1)
+    s = A * [x(i-1); vx(i-1); y(i-1); vy(i-1)] ...
+        + get_random_gaussian_distr_vectors(zeros(size(A,1),1), Q, 1);
     x(i) = s(1);
     vx(i) = s(2);
     y(i) = s(3);

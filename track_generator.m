@@ -1,7 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function track_generator
 %
-% Generates a track, returns a vector (length N) that represents points along the track.
+% Generates a random smooth track, using spline with randomly generated waypoints. Returns
+% a vector (length N) that represents points along the track.
 %
 % x_axis, y_axis:
 % The extent of the 2D space that the track can occupy. x_axis and y_axis are each a

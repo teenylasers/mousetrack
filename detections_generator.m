@@ -1,17 +1,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function detections_generator
 %
-% Given tracks (a vector of track structs), returns detections at a particular time
-% index ti. Each detection is a struct containing {r, rdot, theta}.
+% Given tracks (a vector of track structs), returns a cell array of detections at a
+% particular time index ti. Each detection is a struct containing {r, rdot, theta}.
 %
 
 function det = detections_generator(tracks, ti, radar_coords)
 
-det = [];
+det = {};
 for i = 1:length(tracks);
-  track = tracks(i);
-  det = [det ...
-	track2det(track.x(ti), track.y(ti), track.vx(ti), track.vy(ti), radar_coords)];
+  track = tracks{i};
+  % TODO(jq): assume each track state only generates 1 detection
+  det{end+1} = ...
+	track2det(track.x(ti), track.y(ti), track.vx(ti), track.vy(ti), radar_coords);
+end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,12 +28,10 @@ end
 
 function det = track2det(x, y, vx, vy, radar_coords)
 
-det = [];
-
 % Error-free detection
 new_xy = radar_coords.R' * ([x; y] - radar_coords.p);
 d.r0 = sqrt(new_xy(1)^2 + new_xy(2)^2);
-d.theta0 = atan(new_xy(2)/new_xy(1));
+d.theta0 = atan2(new_xy(2), new_xy(1));
 new_vxy = radar_coords.R' * ([vx; vy] - radar_coords.p);
 d.rdot0 = dot(new_vxy, [cos(d.theta0); sin(d.theta0)]);
 
@@ -45,7 +46,9 @@ d.rdot = d.rdot0 + cov.rdot*randn(1);
 % clutter and false positives
 
 % Return results
-det = [det d];
+det = d;
+
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function expectedCovariance
@@ -59,3 +62,5 @@ function cov = expected_covariance()
 cov.r = 2;
 cov.theta = 2./180.*pi;
 cov.rdot = 0.1;
+
+end

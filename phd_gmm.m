@@ -4,28 +4,40 @@
 % Implement PHD filter using Gaussian mixture model
 %
 % Input:
-% m = current measurements, a list of {x, y, r*rdot}
-% det = current detections, a list of {r, theta, rdot}, used for cov R calculation
+% m = current measurements, a cell array of {r, theta, rdot}, also used for cov R calculation
 % dt = time since the last state estimate
-% prev_belief = the previous belief function, a list of {mu, sig, innov, innov_cov, w}
+% prev_belief = the previous belief function, a cell array of {mu, sig, innov, innov_cov, w}
 % future_times = a list of times from now to predict the state
 %
 % Output:
 % new_belief = the latest belief function, a list of {mu, sig, innov, innov_cov, w}
 % predictions = a list future belief functions at future_times
 
-function [new_belief, predictions] = phd_gmm(m, det, dt, prev_belief, future_times)
+function [new_belief, predictions] = phd_gmm(m, dt, prev_belief, future_times)
 
 %%%%%%  Check input  %%%%%%
-assert(length(prev_belief.mu) == prod(size(prev_belief.mu)), ...
-    'size(prev_belief.mu)=%d.\n', size(prev_belief.mu));
-assert(size(prev_belief.sig, 1) == size(prev_belief.sig, 2));
-num_state_dims = length(prev_belief.mu);
+if length(prev_belief)>0
+  for i = 1:length(prev_belief)
+    assert(length(prev_belief{i}.mu) == prod(size(prev_belief{i}.mu)), ...
+           'size(prev_belief.mu)=(%d, %d).\n', ...
+           size(prev_belief{i}.mu, 1), size(prev_belief{i}.mu, 2));
+    assert(size(prev_belief{i}.sig, 1) == size(prev_belief{i}.sig, 2));
+  end
+end
 assert(length(future_times) == prod(size(future_times)));
 prediction_length = length(future_times);
 
-%%%%%%  Model simplifications  %%%%%%
-b = 0.2; % target_birth_probability
+%%%%%%  Model assumptions & simplifications  %%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%     TO DO    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% How to handle target birth
+
+% target_birth_probability
+b.sig = 10;
+b.w = 0.2;
+
+
 P_d = 1.0; % detection_probability <= 1.0
 P_s = 1.0; % target_survival_probability <= 1.0
 kappa = 1.0; % clutter model
@@ -35,49 +47,56 @@ mu_FA = 0; % false alarm rate
 A = ekf_get_mat_A(dt);
 Q = ekf_get_cov_Q(dt);
 
-unfiltered = []; % unfiltered estimation
+unfiltered = {}; % unfiltered estimation
 for i = 1:length(prev_belief)
-  u.mu = A * prev_belief[i].mu;
-  u.sig = A * prev_belief[i].sig * A' + Q;
-  u.w = prev_belief[i].w;
-  unfiltered = [unfiltered u];
-  end
+  u.mu = A * prev_belief{i}.mu;
+  u.sig = A * prev_belief{i}.sig * A' + Q;
+  u.w = prev_belief{i}.w;
+  unfiltered{end+1} = u;
 end
 
 %%%%%%  Filtered new belief  %%%%%%
 
 % denominator
-denom = [];
+denom = 0;
 for j = 1:length(m)
+  % From spontaneous target birth
+  b.mu = [m{j}.x];
+  % From prev_beliefs
   for k = 1:length(unfiltered)
-    C = efk_get_mat_C(unfiltered[k].mu);
-    R = ekf_get_cov_R(det[j]);
-    d.mu = ekf_measurement_from_state(unfiltered[k].mu);
-    d.sig = C * unfiltered[k].sig * C' + R;
-    d.w = unfiltered[k].w;
-    denom = [denom d];
+    C = ekf_get_mat_C(unfiltered{k}.mu);
+    R = ekf_get_cov_R({j});
+    d.mu = ekf_measurement_from_state(unfiltered{k}.mu);
+    d.sig = C * unfiltered{k}.sig * C' + R;
+    d.w = unfiltered{k}.w;
+    val = d.w * normpdf(d.mu, d.sig, m{j})
+    assert(~isnan(val), 'new belief normalization error: nan');
+    denom = denom + val;
   end
 end
 
 % numerator
-numer = [];
+% numerator.w / denom -> new_belief
+new_belief = {};
 for j = 1:length(m)
   for k = 1:length(unfiltered)
     % The unfiltered state estimation and the measurement are in different
     % spaces, the multiplication of the 2 probability densities is not a
     % direct multiplication. phd_gmm_pdf_multiply() implements this
     % multiplication using specific methods.
-    nu = phd_gmm_pdf_multiply(unfiltered[k], m[j], det[j]);
-    numer = [numer nu];
+    numer = phd_gmm_pdf_multiply(unfiltered{k}, m{j}, det{j});
+    numer.w = numer.w / denom;
+    new_belief{end+1} = numer;
   end
 end
 
 % TODO: incorporate P_d, kappa and mu_FA
-
-new_belief = [];
-predictions = [];
+predictions = {};
 
 %%%%%                              TO DO NEXT                           %%%%%
 %
 % First, visualize numerator overlaid with denominator gaussian mixtures, before
 % deciding how to compute and prune further
+
+
+end

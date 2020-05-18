@@ -34,17 +34,30 @@ end
 
 % Plot the tracks in the global frame
 for i = 1:length(tracks)
-  tr = tracks(i);
+  tr = tracks{i};
   plot(tr.x, tr.y, '.', 'Color', truth_colour);
   % quiver(tr.x, tr.y, tr.vx, tr.vy, 'Color', truth_colour);
 end
 
-% Plot belief functions over time in the global frame
-all_beliefs = transform_beliefs(beliefs);
-plot(all_beliefs.x, all_beliefs.y, '-', 'LineWidth', 2, 'Color', belief_colour);
-plot_xydot = 1;
-if plot_xydot
-  quiver(all_beliefs.x, all_beliefs.y, all_beliefs.xdot, all_beliefs.ydot, 'Color', belief_colour);
+% Plot all belief functions over time in the global frame
+if FLAGS.run_kf || FLAGS.run_ekf || FLAGS.debug_kf || FLAGS.debug_ekf
+  all_beliefs = transform_beliefs_kf(beliefs);
+  plot(all_beliefs.x, all_beliefs.y, '-', 'LineWidth', 2, 'Color', belief_colour);
+  plot_xydot = 1;
+  if plot_xydot
+    quiver(all_beliefs.x, all_beliefs.y, all_beliefs.xdot, all_beliefs.ydot, 'Color', belief_colour);
+  end
+end
+
+% Plot all belief function probability distribution over time in the global frame.
+if FLAGS.run_phd_gmm
+  pdfs = transform_beliefs_phd(beliefs);
+  for t = 1:length(pdfs)
+    pt = pdfs(t);
+    for i = 1:length(pt)
+      visualize_gaussian(pt(i).mu, pt(i).sig, pt(i).w);
+    end
+  end
 end
 
 legend('dets/meas', 'track true path', 'estimated track', 'Location', 'northwest');
@@ -57,26 +70,60 @@ hold off;
 end % end function visualize_tracker_results
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function transform_beliefs_phd
+%
+% Transform time sequenced belief functions beliefs to x-y gaussians for plotting. beliefs
+% is a cell array, where each cell is a list of belief functions.
+
+function pdfs = transform_beliefs_phd(beliefs)
+
+global FLAGS
+
+% For now, all filters describe beliefs as gaussians
+assert(FLAGS.run_phd_gmm==1, 'Only handles FLAGS.run_phd_gmm for now.');
+
+pdfs = {};
+for t = 1:length(beliefs)
+  bt = beliefs{t};
+  gs = [];
+  for i = 1:length(bt)
+    if FLAGS.model_accel
+      g.mu = [bt{i}.mu(1); bt{i}.mu(4)];
+      g.sig = [bt{i}.sig(1); bt{i}.sig(4)];
+    else
+      g.mu = [bt{i}.mu(1); bt{i}.mu(3)];
+      g.sig = [bt{i}.sig(1); bt{i}.sig(3)];
+    end
+    g.w = bt{i}.w;
+    gs(end+1) = g;
+  end
+  pdfs{end+1} = gs;
+end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % function transform_beliefs
 %
-% Transform time sequenced belief functions beliefs for plotting and visualization
-%
+% Transform time sequenced belief functions beliefs for plotting and visualization. beliefs
+% is a list of belief functions.
 
-function all_beliefs = transform_beliefs(beliefs)
+function all_beliefs = transform_beliefs_kf(beliefs)
 global FLAGS
-if FLAGS.model_accel
-  for i = 1:length(beliefs)
-    all_beliefs.x(i) = beliefs(i).mu(1);
-    all_beliefs.xdot(i) = beliefs(i).mu(2);
-    all_beliefs.y(i) = beliefs(i).mu(4);
-    all_beliefs.ydot(i) = beliefs(i).mu(5);
-  end
-else
-  for i = 1:length(beliefs)
-    all_beliefs.x(i) = beliefs(i).mu(1);
-    all_beliefs.xdot(i) = beliefs(i).mu(2);
-    all_beliefs.y(i) = beliefs(i).mu(3);
-    all_beliefs.ydot(i) = beliefs(i).mu(4);
+for t = 1:length(beliefs)
+  bt = beliefs{t};
+  for i = 1:length(bt)
+    if FLAGS.model_accel
+      all_beliefs.x(t) = bt{i}.mu(1);
+      all_beliefs.xdot(t) = bt{i}.mu(2);
+      all_beliefs.y(t) = bt{i}.mu(4);
+      all_beliefs.ydot(t) = bt{i}.mu(5);
+    else
+      all_beliefs.x(t) = bt{i}.mu(1);
+      all_beliefs.xdot(t) = bt{i}.mu(2);
+      all_beliefs.y(t) = bt{i}.mu(3);
+      all_beliefs.ydot(t) = bt{i}.mu(4);
+    end
   end
 end
 end % end function transform_beliefs
@@ -89,22 +136,36 @@ end % end function transform_beliefs
 
 function all_dets = transform_detections(dets, radar_coords)
 
-for i = 1:length(dets)
-  all_dets.r(i) = dets(i).r;
-  all_dets.rdot(i) = dets(i).rdot;
-  all_dets.theta(i) = dets(i).theta;
-  all_dets.xy(:,i) = radar_coords.p + ...
-      dets(i).r * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
-  all_dets.vxy(:,i) = radar_coords.p + ...
-      dets(i).rdot * radar_coords.R * [cos(dets(i).theta); sin(dets(i).theta)];
+all_dets.r = [];
+all_dets.rdot = [];
+all_dets.theta = [];
+all_dets.xy = [];
+all_dets.vxy = [];
+all_dets.r0 = [];
+all_dets.rdot0 = [];
+all_dets.theta0 = [];
+all_dets.xy0 = [];
+all_dets.vxy0 = [];
 
-  all_dets.r0(i) = dets(i).r0;
-  all_dets.rdot0(i) = dets(i).rdot0;
-  all_dets.theta0(i) = dets(i).theta0;
-  all_dets.xy0(:,i) = radar_coords.p + ...
-      dets(i).r0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
-  all_dets.vxy0(:,i) = radar_coords.p + ...
-      dets(i).rdot0 * radar_coords.R * [cos(dets(i).theta0); sin(dets(i).theta0)];
+for t = 1:length(dets)
+  dets_at_t = dets{t};
+  for i = 1:length(dets_at_t);
+    all_dets.r(end+1) = dets_at_t{i}.r;
+    all_dets.rdot(end+1) = dets_at_t{i}.rdot;
+    all_dets.theta(end+1) = dets_at_t{i}.theta;
+    all_dets.xy(:,end+1) = radar_coords.p + ...
+        dets_at_t{i}.r * radar_coords.R * [cos(dets_at_t{i}.theta); sin(dets_at_t{i}.theta)];
+    all_dets.vxy(:,end+1) = radar_coords.p + ...
+        dets_at_t{i}.rdot * radar_coords.R * [cos(dets_at_t{i}.theta); sin(dets_at_t{i}.theta)];
+
+    all_dets.r0(end+1) = dets_at_t{i}.r0;
+    all_dets.rdot0(end+1) = dets_at_t{i}.rdot0;
+    all_dets.theta0(end+1) = dets_at_t{i}.theta0;
+    all_dets.xy0(:,end+1) = radar_coords.p + ...
+        dets_at_t{i}.r0 * radar_coords.R * [cos(dets_at_t{i}.theta0); sin(dets_at_t{i}.theta0)];
+    all_dets.vxy0(:,end+1) = radar_coords.p + ...
+        dets_at_t{i}.rdot0 * radar_coords.R * [cos(dets_at_t{i}.theta0); sin(dets_at_t{i}.theta0)];
+  end
 end
 
 end % end functon transform_detections

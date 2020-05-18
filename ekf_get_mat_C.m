@@ -13,13 +13,49 @@ global FLAGS
 if FLAGS.model_accel
   x = s(1);
   xdot = s(2);
+  xdotdot = s(3);
   y = s(4);
   ydot = s(5);
+  ydotdot = s(6);
 else
   x = s(1);
   xdot = s(2);
   y = s(3);
   ydot = s(4);
+end
+
+if x==0 && y==0
+  if FLAGS.model_accel
+    C = zeros(3, 6);
+    return;
+  else
+    C = zeros(3, 4);
+    return;
+  end
+elseif x==0
+  if FLAGS.model_accel
+    C = [   0  0 0 1 0 0;
+         -1/y  0 0 0 0 0;
+        xdot/y 0 0 0 1 0];
+    return;
+  else
+    C = [   0  0 1 0;
+         -1/y  0 0 0;
+        xdot/y 0 0 1];
+    return;
+  end
+elseif y==0
+  if FLAGS.model_accel
+    C = [1 0 0 0 0 0;
+         0 0 0 0 0 0;
+         0 0 0 0 0 0];
+    return;
+  else
+    C = [1 0 0 0;
+         0 0 0 0;
+         0 0 0 0];
+    return;
+  end
 end
 
 if FLAGS.model_accel

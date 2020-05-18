@@ -2,8 +2,7 @@
 % function ekf
 %
 % Input:
-% m = current measurement {x, y, r*rdot}
-% det = current detection {r, theta, rdot}, used for covariance R calculation
+% det = current detection struct {r, theta, rdot}, also used for covariance R calculation
 % dt = time since the last state estimate
 % prev_belief = the previous belief function {mu, sig, innov, innov_cov}
 % future_times = a list of times from now to predict the state
