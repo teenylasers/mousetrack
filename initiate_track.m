@@ -23,7 +23,7 @@ if FLAGS.run_kf || FLAGS.run_ekf
     return;
   end
 elseif FLAGS.debug_kf || FLAGS.debug_ekf
-  if sum(isnan(dets(end)))
+  if sum(isnan(m(end)))
     fprintf('Erroneous input: dets(end) = %f', dets(end));
     return
   end
@@ -36,11 +36,11 @@ if FLAGS.run_kf
   ydot = rdot * cos(theta);
   belief.innov = zeros(length(m), 1);
 elseif FLAGS.debug_kf
-  x = dets(1);
+  x = m(1);
   xdot = 0;
-  y = dets(2);
+  y = m(2);
   ydot = 0;
-  belief.innov = zeros(size(dets,1),1);
+  belief.innov = zeros(length(m),1);
 elseif FLAGS.run_ekf
   x = -r * sin(theta);
   y = r * cos(theta);
@@ -48,14 +48,14 @@ elseif FLAGS.run_ekf
   ydot = rdot * cos(theta);
   belief.innov = zeros(length(m), 1);
 elseif FLAGS.debug_ekf
-  r = dets(1);
-  theta = dets(2);
-  rdot = dets(3);
+  r = m(1);
+  theta = m(2);
+  rdot = m(3);
   x = -r * sin(theta);
   y = r * cos(theta);
   xdot = 0;
   ydot = 0;
-  belief.innov = zeros(size(dets, 1), 1);
+  belief.innov = zeros(length(m), 1);
 end
 
 if FLAGS.model_accel

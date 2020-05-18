@@ -26,9 +26,12 @@ end
 % Plot measurements over time in the global frame
 if isempty(dets) && ~isempty(meas)
   if FLAGS.run_kf || FLAGS.debug_kf
-    plot(meas(1,:), meas(2,:), 'o', 'Color', det_colour);
+    all_meas = transform_measurements(meas);
+    plot(all_meas(1,:), all_meas(2,:), 'o', 'Color', det_colour);
   elseif FLAGS.run_ekf || FLAGS.debug_ekf
-    plot(-meas(1,:).*sin(meas(2,:)), meas(1,:).*cos(meas(2,:)), 'o', 'Color', det_colour);
+    all_meas = transform_measurements(meas);
+    plot(-all_meas(1,:).*sin(all_meas(2,:)), all_meas(1,:).*cos(all_meas(2,:)), 'o', ...
+         'Color', det_colour);
   end
 end
 
@@ -168,4 +171,22 @@ for t = 1:length(dets)
   end
 end
 
-end % end functon transform_detections
+end % end function transform_detections
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function transform_measurements
+%
+% Transform time sequenced measurements for plotting and visualization
+%
+
+function all_meas = transform_measurements(meas)
+
+all_meas = [];
+for t = 1:length(meas)
+  mt = meas{t};
+  for i = 1:length(mt)
+    all_meas = [all_meas mt{i}];
+  end
+end
+
+end % end function transform_measurements
