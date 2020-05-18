@@ -5,7 +5,8 @@
 % Terminology
 %  - Track = ground truth of the target's state over time
 %  - Detection = raw data from the sensor (radar), ie {r, theta, rdot}
-%  - Measurement = a vector that is converted from detection, {x, y, r*rdot}
+%  - Measurement = a vector that is converted from detection, content depends on filter
+%    implementation
 
 % Structs
 %  - x_axis = {min, max, extent}, in units of m
@@ -37,9 +38,9 @@ global FLAGS
 % tracker
 FLAGS.run_kf = 0;         % run tracker using linear kalman filter
 FLAGS.debug_kf = 0;       % debug tracker with linear kalman filter
-FLAGS.run_ekf = 1;        % run tracker using extended kalman filter
+FLAGS.run_ekf = 0;        % run tracker using extended kalman filter
 FLAGS.debug_ekf = 0;      % debug tracker with extended kalman filter
-FLAGS.run_phd_gmm = 0;    % run tracker using PHD filter with gaussian mixture model
+FLAGS.run_phd_gmm = 1;    % run tracker using PHD filter with gaussian mixture model
 % model
 FLAGS.model_accel = 0;    % run EKF with acceleration in the motion model
 FLAGS.inject_clutter = 0; % inject clutter into the measurements
@@ -67,7 +68,7 @@ beliefs = {};
 
 for ti = 1:N % ti = time index
 
-  fprintf('\nTime step %d\n', ti);
+  %fprintf('Time step %d', ti);
 
   % Get the next measurement
   [new_dets, new_meas] = get_next_measurement(tracks, ti);
@@ -86,7 +87,7 @@ for ti = 1:N % ti = time index
       new_belief = {b};
     elseif FLAGS.debug_kf || FLAGS.debug_ekf
       b = initiate_track(new_dets{end}, new_meas{end});
-      new_belief = {b}
+      new_belief = {b};
     else
       fprintf('PHD filter does not need explicit track initiation.\n');
       [new_belief, predictions] = run_filter(new_meas, new_dets, dt, {}, {});
@@ -101,7 +102,7 @@ for ti = 1:N % ti = time index
   %   visualize_tracker_results(radar_coords, tracks, dets, meas, beliefs);
   %   %xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
   %   %ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
-  %   disp('Press any key to continue.\n'); pause;
+  %   disp('Press any key to continue.'); pause;
   % end
 end
 
@@ -110,7 +111,7 @@ if FLAGS.run_kf || FLAGS.debug_kf || FLAGS.run_ekf || FLAGS.debug_ekf
   % TODO: only supports single target single track for now.
   evaluate_kalman_filter(tracks{1}, meas, beliefs, 1);
 else
-  assert(false, 'PHD filter eval is not yet implemented.');
+  % assert(false, 'PHD filter eval is not yet implemented.');
   % evaluate_phd_filter();
 end
 
@@ -183,6 +184,6 @@ elseif FLAGS.debug_ekf || FLAGS.run_ekf
   [nb, predictions] = ekf(new_meas{end}, new_dets{end}, dt, prev_belief{end}, future_times);
   new_belief = {nb};
 elseif FLAGS.run_phd_gmm
-  [new_belief, predictions] = phd_gmm(new_dets, dt, prev_belief, future_times);
+  [new_belief, predictions] = phd_gmm(new_meas, dt, prev_belief, future_times);
 end
 end % function run_filter

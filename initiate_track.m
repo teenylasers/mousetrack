@@ -30,42 +30,17 @@ elseif FLAGS.debug_kf || FLAGS.debug_ekf
 end
 
 if FLAGS.run_kf
-  x = m(1);
-  y = m(2);
-  xdot = -rdot * sin(theta);
-  ydot = rdot * cos(theta);
-  belief.innov = zeros(length(m), 1);
+  belief.mu = kf_measurement_to_initial_state(d);
 elseif FLAGS.debug_kf
-  x = m(1);
-  xdot = 0;
-  y = m(2);
-  ydot = 0;
-  belief.innov = zeros(length(m),1);
+  belief.mu = kf_measurement_to_initial_state(m);
 elseif FLAGS.run_ekf
-  x = -r * sin(theta);
-  y = r * cos(theta);
-  xdot = -rdot * sin(theta);
-  ydot = rdot * cos(theta);
-  belief.innov = zeros(length(m), 1);
+  belief.mu = ekf_measurement_to_initial_state(d);
 elseif FLAGS.debug_ekf
-  r = m(1);
-  theta = m(2);
-  rdot = m(3);
-  x = -r * sin(theta);
-  y = r * cos(theta);
-  xdot = 0;
-  ydot = 0;
-  belief.innov = zeros(length(m), 1);
+  belief.mu = ekf_measurement_to_initial_state(m);
 end
 
-if FLAGS.model_accel
-  xdotdot = 0;
-  ydotdot = 0;
-  belief.mu = [x; xdot; xdotdot; y; ydot; ydotdot];
-else
-  belief.mu = [x; xdot; y; ydot];
-end
 belief.sig = 1e9 * eye(length(belief.mu));
+belief.innov = zeros(length(m), 1);
 belief.innov_cov = eye(length(belief.innov));
 
 % Decide whether there has been enough detections to initiate a track.

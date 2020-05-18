@@ -31,11 +31,12 @@ prediction_length = length(future_times);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%     TO DO    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% How to handle target birth
 
 % target_birth_probability
-b.sig = 10;
-b.w = 0.2;
+% TODO: How to handle target birth
+% TODO: setting of sig and w depends on what causes target birth.
+const_b_sig = 10;
+const_b_w = 0.02;
 
 
 P_d = 1.0; % detection_probability <= 1.0
@@ -61,30 +62,50 @@ end
 denom = 0;
 for j = 1:length(m)
   % From spontaneous target birth
-  b.mu = [m{j}.x];
+  b.mu = ekf_measurement_to_initial_state(m{j});
+  b.sig = eye(length(b.mu))*const_b_sig;
+  b.w = const_b_w;
+  C = ekf_get_mat_C(b.mu);
+  R = ekf_get_cov_R(m{j});
+  d.mu = ekf_measurement_from_state(b.mu);
+  d.sig = C * b.sig * C' + R;
+  d.w = b.w;
+  val = d.w * normpdf(d.mu, d.sig, m{j});
+  assert(~isnan(val), 'new belief normalization error: val = nan');
+  denom = denom + val;
   % From prev_beliefs
   for k = 1:length(unfiltered)
     C = ekf_get_mat_C(unfiltered{k}.mu);
-    R = ekf_get_cov_R({j});
+    R = ekf_get_cov_R(m{j});
     d.mu = ekf_measurement_from_state(unfiltered{k}.mu);
     d.sig = C * unfiltered{k}.sig * C' + R;
     d.w = unfiltered{k}.w;
-    val = d.w * normpdf(d.mu, d.sig, m{j})
-    assert(~isnan(val), 'new belief normalization error: nan');
+    val = d.w * normpdf(d.mu, d.sig, m{j});
+    assert(~isnan(val), 'new belief normalization error: val = nan');
     denom = denom + val;
   end
 end
+assert(~isnan(denom), 'new belief normalization error: denom = nan');
+assert(denom~=0, 'new belief normalization error: denom = 0');
 
 % numerator
 % numerator.w / denom -> new_belief
 new_belief = {};
 for j = 1:length(m)
+  % From spontaneous target birth
+  b.mu = ekf_measurement_to_initial_state(m{j});
+  b.sig = eye(length(b.mu))*const_b_sig;
+  b.w = const_b_w;
+  numer = phd_gmm_pdf_multiply(b, m{j});
+  numer.w = numer.w / denom;
+  new_belief{end+1} = numer;
+  % From prev_beliefs
   for k = 1:length(unfiltered)
     % The unfiltered state estimation and the measurement are in different
     % spaces, the multiplication of the 2 probability densities is not a
     % direct multiplication. phd_gmm_pdf_multiply() implements this
     % multiplication using specific methods.
-    numer = phd_gmm_pdf_multiply(unfiltered{k}, m{j}, det{j});
+    numer = phd_gmm_pdf_multiply(unfiltered{k}, m{j});
     numer.w = numer.w / denom;
     new_belief{end+1} = numer;
   end

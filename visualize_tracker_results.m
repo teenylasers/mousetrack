@@ -43,8 +43,8 @@ for i = 1:length(tracks)
 end
 
 % Plot all belief functions over time in the global frame
-if FLAGS.run_kf || FLAGS.run_ekf || FLAGS.debug_kf || FLAGS.debug_ekf
-  all_beliefs = transform_beliefs_kf(beliefs);
+if FLAGS.run_kf || FLAGS.run_ekf || FLAGS.debug_kf || FLAGS.debug_ekf || FLAGS.run_phd_gmm
+  all_beliefs = transform_beliefs_track(beliefs);
   plot(all_beliefs.x, all_beliefs.y, '-', 'LineWidth', 2, 'Color', belief_colour);
   plot_xydot = 1;
   if plot_xydot
@@ -56,16 +56,18 @@ end
 if FLAGS.run_phd_gmm
   pdfs = transform_beliefs_phd(beliefs);
   for t = 1:length(pdfs)
-    pt = pdfs(t);
-    for i = 1:length(pt)
-      visualize_gaussian(pt(i).mu, pt(i).sig, pt(i).w);
+    if mod(t,20)==0
+      pt = pdfs{t};
+      for i = 1:length(pt)
+        visualize_gaussian(pt{i}.mu, pt{i}.sig, pt{i}.w);
+      end
     end
   end
 end
 
-legend('dets/meas', 'track true path', 'estimated track', 'Location', 'northwest');
-global x_axis
-global y_axis
+%legend('dets/meas', 'track true path', 'estimated track', 'Location', 'northwest');
+%global x_axis
+%global y_axis
 %xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
 %ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
 hold off;
@@ -92,10 +94,12 @@ for t = 1:length(beliefs)
   for i = 1:length(bt)
     if FLAGS.model_accel
       g.mu = [bt{i}.mu(1); bt{i}.mu(4)];
-      g.sig = [bt{i}.sig(1); bt{i}.sig(4)];
+      g.sig = [bt{i}.sig(1,1) bt{i}.sig(1,4);
+               bt{i}.sig(4,1) bt{i}.sig(4,4)];
     else
       g.mu = [bt{i}.mu(1); bt{i}.mu(3)];
-      g.sig = [bt{i}.sig(1); bt{i}.sig(3)];
+      g.sig = [bt{i}.sig(1,1) bt{i}.sig(1,3);
+               bt{i}.sig(3,1) bt{i}.sig(3,3)];
     end
     g.w = bt{i}.w;
     gs{end+1} = g;
@@ -111,21 +115,28 @@ end
 % Transform time sequenced belief functions beliefs for plotting and visualization. beliefs
 % is a list of belief functions.
 
-function all_beliefs = transform_beliefs_kf(beliefs)
+function all_beliefs = transform_beliefs_track(beliefs)
 global FLAGS
 for t = 1:length(beliefs)
   bt = beliefs{t};
+  % TODO: for now, at each time step, plot the highest weighted belief only.
+  w_max = 0;
   for i = 1:length(bt)
-    if FLAGS.model_accel
-      all_beliefs.x(t) = bt{i}.mu(1);
-      all_beliefs.xdot(t) = bt{i}.mu(2);
-      all_beliefs.y(t) = bt{i}.mu(4);
-      all_beliefs.ydot(t) = bt{i}.mu(5);
-    else
-      all_beliefs.x(t) = bt{i}.mu(1);
-      all_beliefs.xdot(t) = bt{i}.mu(2);
-      all_beliefs.y(t) = bt{i}.mu(3);
-      all_beliefs.ydot(t) = bt{i}.mu(4);
+    if bt{i}.w > w_max
+      if FLAGS.model_accel
+        all_beliefs.x(t) = bt{i}.mu(1);
+        all_beliefs.xdot(t) = bt{i}.mu(2);
+        all_beliefs.y(t) = bt{i}.mu(4);
+        all_beliefs.ydot(t) = bt{i}.mu(5);
+      else
+        all_beliefs.x(t) = bt{i}.mu(1);
+        all_beliefs.xdot(t) = bt{i}.mu(2);
+        all_beliefs.y(t) = bt{i}.mu(3);
+        all_beliefs.ydot(t) = bt{i}.mu(4);
+      end
+      w_max = bt{i}.w;
+      %else
+      %fprintf('w_max = %f, i = %d, w = %f.\n', w_max, i, bt{i}.w);
     end
   end
 end
