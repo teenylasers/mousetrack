@@ -97,17 +97,18 @@ for ti = 1:N % ti = time index
   beliefs{end+1} = new_belief;
 
   % Step-by-step visualization
-  if mod(ti,10)==0
-    visualize_tracker_results(radar_coords, tracks, dets, meas, beliefs);
-    %xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
-    %ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
-    disp('Press any key to continue.\n'); pause;
-  end
+  % if mod(ti,10)==0
+  %   visualize_tracker_results(radar_coords, tracks, dets, meas, beliefs);
+  %   %xlim([x_axis.min-x_axis.extent*0.1 x_axis.max+x_axis.extent*0.1]);
+  %   %ylim([y_axis.min-y_axis.extent*0.1 y_axis.max+y_axis.extent*0.1]);
+  %   disp('Press any key to continue.\n'); pause;
+  % end
 end
 
 % Evaluate and visualize how well the filter does
 if FLAGS.run_kf || FLAGS.debug_kf || FLAGS.run_ekf || FLAGS.debug_ekf
-  evaluate_kalman_filter(tracks(1), meas, beliefs, 1);
+  % TODO: only supports single target single track for now.
+  evaluate_kalman_filter(tracks{1}, meas, beliefs, 1);
 else
   assert(false, 'PHD filter eval is not yet implemented.');
   % evaluate_phd_filter();

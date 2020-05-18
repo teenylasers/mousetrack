@@ -22,28 +22,28 @@ assert(length(beliefs) == time_length);
 naive_p_err = zeros(1, time_length);
 p_err = zeros(1, time_length);
 v_err = zeros(1, time_length);
-for i = 1:time_length
+for t = 1:time_length
   if FLAGS.run_kf || FLAGS.debug_kf
-    naive_dx = true_track.x(i) - meas(1,i);
-    naive_dy = true_track.y(i) - meas(2,i);
+    naive_dx = true_track.x(t) - meas{t}{end}(1);
+    naive_dy = true_track.y(t) - meas{t}{end}(2);
   elseif FLAGS.run_ekf || FLAGS.debug_ekf
-    naive_dx = true_track.x(i) + meas(1,i) * sin(meas(2,i));
-    naive_dy = true_track.y(i) - meas(1,i) * cos(meas(2,i));
+    naive_dx = true_track.x(t) + meas{t}{end}(1) * sin(meas{t}{end}(2));
+    naive_dy = true_track.y(t) - meas{t}{end}(1) * cos(meas{t}{end}(2));
   end
   if FLAGS.model_accel
-    dx = true_track.x(i) - beliefs(i).mu(1);
-    dvx = true_track.vx(i) - beliefs(i).mu(2);
-    dy = true_track.y(i) - beliefs(i).mu(4);
-    dvy = true_track.vy(i) - beliefs(i).mu(5);
+    dx = true_track.x(t) - beliefs{t}{end}.mu(1);
+    dvx = true_track.vx(t) - beliefs{t}{end}.mu(2);
+    dy = true_track.y(t) - beliefs{t}{end}.mu(4);
+    dvy = true_track.vy(t) - beliefs{t}{end}.mu(5);
   else
-    dx = true_track.x(i) - beliefs(i).mu(1);
-    dvx = true_track.vx(i) - beliefs(i).mu(2);
-    dy = true_track.y(i) - beliefs(i).mu(3);
-    dvy = true_track.vy(i) - beliefs(i).mu(4);
+    dx = true_track.x(t) - beliefs{t}{end}.mu(1);
+    dvx = true_track.vx(t) - beliefs{t}{end}.mu(2);
+    dy = true_track.y(t) - beliefs{t}{end}.mu(3);
+    dvy = true_track.vy(t) - beliefs{t}{end}.mu(4);
   end
-  p_err(i) = sqrt(dx^2 + dy^2);
-  v_err(i) = sqrt(dvx^2 + dvy^2);
-  naive_p_err(i) = sqrt(naive_dx^2 + naive_dy^2);
+  p_err(t) = sqrt(dx^2 + dy^2);
+  v_err(t) = sqrt(dvx^2 + dvy^2);
+  naive_p_err(t) = sqrt(naive_dx^2 + naive_dy^2);
 end
 
 belief_x = zeros(1, time_length);
@@ -51,18 +51,18 @@ belief_y = zeros(1, time_length);
 belief_vx = zeros(1, time_length);
 belief_vy = zeros(1, time_length);
 if FLAGS.model_accel
-  for i = 1:time_length
-    belief_x(i) = beliefs(i).mu(1);
-    belief_vx(i) = beliefs(i).mu(2);
-    belief_y(i) = beliefs(i).mu(4);
-    belief_vy(i) = beliefs(i).mu(5);
+  for t = 1:time_length
+    belief_x(t) = beliefs{t}{end}.mu(1);
+    belief_vx(t) = beliefs{t}{end}.mu(2);
+    belief_y(t) = beliefs{t}{end}.mu(4);
+    belief_vy(t) = beliefs{t}{end}.mu(5);
   end
 else
-  for i = 1:time_length
-    belief_x(i) = beliefs(i).mu(1);
-    belief_vx(i) = beliefs(i).mu(2);
-    belief_y(i) = beliefs(i).mu(3);
-    belief_vy(i) = beliefs(i).mu(4);
+  for t = 1:time_length
+    belief_x(t) = beliefs{t}{end}.mu(1);
+    belief_vx(t) = beliefs{t}{end}.mu(2);
+    belief_y(t) = beliefs{t}{end}.mu(3);
+    belief_vy(t) = beliefs{t}{end}.mu(4);
   end
 end
 
@@ -106,7 +106,7 @@ if plot_res
   title('Measurement residual');
   num_sigs_viz = 5;
 end
-meas_dimensions = length(beliefs(1).innov);
+meas_dimensions = length(beliefs{end}{end}.innov);
 if FLAGS.debug_kf || FLAGS.run_kf
   residual_content = ["x (m)"; "y (m)"; "r*rdot (m^2/s)"];
 elseif FLAGS.debug_ekf || FLAGS.run_ekf
@@ -115,10 +115,10 @@ end
 for j = 1:meas_dimensions
   accum_innov = zeros(1, time_length);
   accum_innov_bound = zeros(1, time_length);
-  for i = 1:time_length
-    accum_innov(i) = beliefs(i).innov(j);
+  for t = 1:time_length
+    accum_innov(t) = beliefs{t}{end}.innov(j);
     % TODO: only plotting covariance diagonal terms, how to use off-diag terms.
-    accum_innov_bound(i) = sqrt(beliefs(i).innov_cov(j,j));
+    accum_innov_bound(t) = sqrt(beliefs{t}{end}.innov_cov(j,j));
   end
   if plot_res
     subplot(meas_dimensions,1,j);
