@@ -88,7 +88,7 @@ assert(FLAGS.run_phd_gmm==1, 'Only handles FLAGS.run_phd_gmm for now.');
 pdfs = {};
 for t = 1:length(beliefs)
   bt = beliefs{t};
-  gs = [];
+  gs = {};
   for i = 1:length(bt)
     if FLAGS.model_accel
       g.mu = [bt{i}.mu(1); bt{i}.mu(4)];
@@ -98,7 +98,7 @@ for t = 1:length(beliefs)
       g.sig = [bt{i}.sig(1); bt{i}.sig(3)];
     end
     g.w = bt{i}.w;
-    gs(end+1) = g;
+    gs{end+1} = g;
   end
   pdfs{end+1} = gs;
 end

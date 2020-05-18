@@ -15,7 +15,7 @@ else
   ydot = s(4);
 end
 r = sqrt(x^2+y^2);
-theta = atan2(y,x);
+theta = atan2(-x, y);
 rdot = -xdot * sin(theta) + ydot * cos(theta);
 m = [r; theta; rdot];
 end
